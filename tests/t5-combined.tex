@@ -1,0 +1,67 @@
+\section{Combinations}
+
+\subsection{Figure Then Table}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=2.5cm]{example-image-c}
+  \caption{Figure directly followed by a table.}
+\end{figure}
+
+\begin{table}
+  \caption{Table directly after a figure.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Key} & \textbf{Value} \\
+    \midrule
+    a & 1 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Table Then Figure}
+
+\begin{table}
+  \caption{Table directly followed by a figure.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Key} & \textbf{Value} \\
+    \midrule
+    b & 2 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
+  \caption{Figure directly after a table.}
+\end{figure}
+
+\subsection{List Then Table, Figure Then List}
+
+\begin{enumerate}
+  \item A list directly followed by a table.
+  \item Second item.
+\end{enumerate}
+
+\begin{table}
+  \caption{Table directly after a list.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Key} & \textbf{Value} \\
+    \midrule
+    c & 3 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
+  \caption{Figure directly followed by a list.}
+\end{figure}
+
+\begin{itemize}
+  \item List directly after a figure.
+  \item Second bullet.
+\end{itemize}
+
+Closing paragraph of the combinations section.

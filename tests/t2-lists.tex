@@ -1,0 +1,80 @@
+\section{Lists}
+
+\subsection{Bullets}
+
+Paragraph before a bullet list.
+
+\begin{itemize}
+  \item First bullet.
+  \item Second bullet with a long text that wraps onto the next line so the
+        wrapped line should line up with the text, not the bullet.
+  \item Third bullet.
+\end{itemize}
+
+Paragraph after the bullet list.
+
+\subsection{Numbered}
+
+\begin{enumerate}
+  \item List directly after a heading.
+  \item Second item.
+  \item Third item.
+\end{enumerate}
+
+\subsection{Nested Bullets}
+
+\begin{itemize}
+  \item Level 1
+  \begin{itemize}
+    \item Level 2
+    \begin{itemize}
+      \item Level 3, with a long text that wraps to check the indent of the
+            wrapped line at the deepest level.
+    \end{itemize}
+    \item Level 2 again
+  \end{itemize}
+  \item Level 1 again
+\end{itemize}
+
+\subsection{Nested Numbers}
+
+\begin{enumerate}
+  \item Step one
+  \begin{enumerate}
+    \item Sub-step a
+    \item Sub-step b
+    \begin{enumerate}
+      \item Detail i
+      \item Detail ii
+    \end{enumerate}
+  \end{enumerate}
+  \item Step two
+\end{enumerate}
+
+\subsection{Mixed}
+
+\begin{enumerate}
+  \item Numbered item with bullets inside:
+  \begin{itemize}
+    \item a bullet
+    \item another bullet
+  \end{itemize}
+  \item \textbf{Bold lead-in.} Text after a bold lead-in, as in the
+        Limitations section.
+  \item Item with a second paragraph.
+
+        The second paragraph of the same item.
+\end{enumerate}
+
+\subsection{Description List}
+
+\begin{description}
+  \item[Term] Definition of the term.
+  \item[Longer term] A definition long enough to wrap onto a second line so the
+        wrapped line indent can be checked.
+\end{description}
+\subsection{List Then Heading}
+
+\begin{itemize}
+  \item A list ending right before a heading.
+\end{itemize}

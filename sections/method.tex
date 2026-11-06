@@ -1,0 +1,40 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Overview}
+
+Give the whole pipeline in one figure (\cref{fig:pipeline}) and one
+paragraph.
+
+% ---- Single figure: caption BELOW ----
+\begin{figure}
+  \includegraphics[width=\linewidth, height=3.5cm]{example-image-golden}
+  \caption{The final pipeline.}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{Development Steps}
+
+Explain how the design was reached, each step fixing a weakness of the
+previous one:
+
+\begin{enumerate}
+  \item Baseline result and its main weakness.
+  \item Second approach and what it improved.
+  \item Final approach and why it was chosen.
+\end{enumerate}
+
+\subsection{Models}
+
+Name each model with a citation \cite{example-article} and give the training
+settings needed to reproduce it.
+
+\subsection{Key Rule or Formula}
+
+Define any formula in words, then display it. For two inputs $a$ and $b$
+with weights $w_a$ and $w_b$, the combined value $c$ is
+\begin{equation}
+  c = \frac{w_a\, a + w_b\, b}{w_a + w_b}.
+  \label{eq:combine}
+\end{equation}
+\Cref{eq:combine} places $c$ closer to the input with the larger weight.

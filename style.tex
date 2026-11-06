@@ -1,0 +1,430 @@
+% =====================================================================
+%  style.tex — all formatting lives here. Content files never set
+%  spacing, fonts or numbering themselves.
+%
+%  Every design value is set ONCE in the SETTINGS block below, in Google
+%  Docs terms (size, line spacing, space before/after). Everything after
+%  it refers back to those settings, so a change there applies
+%  everywhere. Below it are only fixed font measurements and standard
+%  LaTeX page-break behaviour.
+%
+%  Needs LuaLaTeX or XeLaTeX (Overleaf: Menu > Compiler > LuaLaTeX).
+% =====================================================================
+
+% =====================================================================
+%  SETTINGS  (edit here only)
+% =====================================================================
+
+% ---- Line spacing (Google Docs: Format > Line spacing) ----
+\newcommand{\DocsLineSpacing}{1.5}
+
+% ---- Text sizes, pt ----
+\newcommand{\NormalSize}{11}    % Normal text
+\newcommand{\TitleSize}{18}     % Title
+\newcommand{\SubtitleSize}{9}   % Subtitle: captions, header, page number
+
+% ---- Paragraph spacing, pt (Google Docs "space before/after") ----
+\newcommand{\NormalAfter}{12}   % Normal text, after   (before = 0)
+\newcommand{\TitleAfter}{4}     % Title, after          (before = 0)
+\newcommand{\SubtitleAfter}{12} % Subtitle (captions), after: sub-figure caption → next image
+\newcommand{\CaptionGap}{10}    % space between a figure/table and its own caption
+                                % (same for both; edge of image/table → caption text)
+% Headings: size, before, after  → applied with \DocsHeading below
+\newcommand{\HeadingOne}  {{14}{16}{4}}
+\newcommand{\HeadingTwo}  {{12}{4}{4}}
+\newcommand{\HeadingThree}{{11}{4}{0}}
+
+% ---- Fonts (files in fonts/) ----
+% Weights: Regular, Medium, SemiBold, Bold
+\newcommand{\BodyWeight}{Regular}    % normal text
+\newcommand{\BoldWeight}{SemiBold}   % headings, caption labels, \textbf
+\newcommand{\TitleWeight}{Medium}    % title
+
+% ---- Tables (Google Docs: Table properties) ----
+\newcommand{\TableLineSpacing}{1}   % line spacing inside cells (single)
+\newcommand{\TableCellPadding}{5}   % cell padding, pt (Docs default 0.07 in)
+\newcommand{\TableOuterRule}{1.5}   % top and bottom border, pt, black
+\newcommand{\TableHeaderRule}{0.75} % border under the header row, pt, black
+\newcommand{\TableRowRule}{0.5}     % border between rows, pt
+\newcommand{\TableRowRuleColor}{EFEFEF}  % Docs "light gray 2"
+% Automatic width (autotable): measured from the table's content
+\newcommand{\TableFullAt}{0.6}  % content wider than this share of the line → full width
+\newcommand{\TableMinWidth}{0.4}% content narrower than this → widened to this share
+\newcommand{\TableColumnGap}{24}% extra space per column in a narrow table, pt
+\newcommand{\TableTextMin}{0.2} % a wrapping text column is never narrower than
+                                % this share of the line; shorter ones stay natural
+
+% ---- Lists and indents (Google Docs: Bullets & numbering > Indentation options)
+\newcommand{\ListLabelIndent}{18}  % bullet/number from the margin (0.25 in)
+\newcommand{\ListTextIndent}{36}   % text from the margin (0.5 in); each nested
+                                   % level and each "Increase indent" adds this
+
+% ---- Alignment of figures, tables and their captions ----
+% ieee:     IEEE / NeurIPS / ICML convention (default): narrow figures/tables
+%           centred; one-line caption centred, longer caption justified
+%           across the full text width
+% centered: every caption centred, narrow figures/tables centred
+% left:     every caption left-aligned, figures/tables at the left margin
+\newcommand{\CaptionStyle}{ieee}
+
+% ---- Figures/tables ↔ surrounding text, pt (LaTeX only, no Docs equivalent)
+\newcommand{\FloatGap}{18}
+
+% ---- Page ----
+\newcommand{\PageSetup}{letterpaper, margin=1in,
+                        headheight=32pt, headsep=4.6pt, footskip=24pt}
+
+% =====================================================================
+%  Below this line: no values, only uses of the settings above
+% =====================================================================
+
+% ---------- How Google Docs spaces lines ----------
+% Docs line height = line spacing × 1.28 × font size for Lora
+% (1.28 = Lora ascender + descender). Gap between paragraphs =
+% the LARGER of "after" (paragraph above) and "before" (paragraph below).
+\newcommand{\LoraHeight}{1.28}
+\newcommand{\LoraDescent}{0.274}
+\newcommand{\DocsPitch}[1]{\fpeval{\DocsLineSpacing*\LoraHeight*#1}}  % {11} -> 21.12
+\newcommand{\DocsBelow}{\fpeval{(\DocsLineSpacing-1)*\LoraHeight/2+\LoraDescent}}
+% Set a font size with its Docs line height:  \DocsSize{9}
+\newcommand{\DocsSize}[1]{\fontsize{#1}{\DocsPitch{#1}pt}\selectfont}
+% Space between a Docs line's top and its text, per size:  (pitch - size)/2
+\newcommand{\DocsTextOffset}[1]{\fpeval{(\DocsPitch{#1}-#1)/2}}
+
+% ---------- How Google Docs places images (measured from your PDF, 0.25 pt steps) ----------
+\newcommand{\DocsImageAbove}{3.25}   % paragraph top  → image top
+% ---------- How LaTeX places captions (measured, 0.25 pt steps) ----------
+\newcommand{\LatexCaptionTop}{5.5}     % caption skip → caption text top
+\newcommand{\LatexCaptionBottom}{3.75}  % caption text bottom → next gap
+\newcommand{\LatexTableCaption}{2.75}   % caption text bottom → table top
+
+% ---------- Caption gaps, converted to LaTeX ----------
+% image → its caption below  (LaTeX adds \LatexCaptionTop itself)
+\newcommand{\FigureCaptionGap}{\fpeval{\CaptionGap-\LatexCaptionTop}}
+% sub-figure caption → next image (Docs: Subtitle "after", then the image line)
+\newcommand{\SubfigureGap}{\fpeval{\DocsTextOffset{\SubtitleSize}
+  +max(\SubtitleAfter,0)+\DocsImageAbove-\LatexCaptionBottom}}
+% table caption above → its table  (LaTeX adds \LatexTableCaption itself)
+\newcommand{\TableCaptionGap}{\fpeval{\CaptionGap-\LatexTableCaption}}
+
+% ---------- Page ----------
+\usepackage{iftex}
+\expandafter\usepackage\expandafter[\PageSetup]{geometry}
+
+% ---------- Fonts ----------
+\ifPDFTeX
+  \errmessage{This template needs LuaLaTeX or XeLaTeX for the Lora fonts.
+    On Overleaf: Menu > Compiler > LuaLaTeX, then Recompile}
+  \newcommand{\titleweight}{\mdseries}
+\else
+  \usepackage{lmodern}               % scalable math fonts (no size warnings)
+  \usepackage{fontspec}
+  \setmainfont{Lora}[
+    Path           = fonts/,
+    Extension      = .ttf,
+    UprightFont    = *-\BodyWeight,
+    ItalicFont     = *-Italic,
+    BoldFont       = *-\BoldWeight,
+    BoldItalicFont = *-\BoldWeight Italic]
+  \newfontfamily{\titleweight}{Lora-\TitleWeight}[Path=fonts/, Extension=.ttf,
+                                       ItalicFont=Lora-\TitleWeight Italic]
+\fi
+
+% ---------- Body text ----------
+% Normal text at \NormalSize with the Docs line height.
+\makeatletter
+\let\Template@normalsize\normalsize
+\renewcommand{\normalsize}{\Template@normalsize\DocsSize{\NormalSize}}
+\makeatother
+\normalsize
+\newcommand{\docssmall}{\DocsSize{\SubtitleSize}}
+\setlength{\parindent}{0pt}               % no first-line indent
+\setlength{\parskip}{\NormalAfter pt}     % Normal "space after"
+\AtBeginDocument{\raggedright}            % left-aligned like Google Docs
+                                          % (delete this line for justified text)
+
+% ---------- Packages ----------
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{etoolbox}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink, capitalise, noabbrev]{cleveref}   % load last
+
+% ---------- Headings ----------
+% Converts Docs size/before/after to LaTeX, assuming Normal text
+% above and below the heading.
+% \DocsHeading{level}{number format}{\HeadingOne}
+\newcommand{\DocsHeading}[3]{\expandafter\DocsHeadingAux#3{#1}{#2}}
+\newcommand{\DocsHeadingAux}[5]{% size, before, after, level, number
+  \titleformat{#4}{\DocsSize{#1}\bfseries}{#5}{0.35em}{}%
+  \titlespacing*{#4}{0pt}
+    {\fpeval{max(\NormalAfter,#2)-\NormalAfter+\DocsBelow*(\NormalSize-#1)}pt}
+    {\fpeval{max(#3,0)-\NormalAfter+\DocsBelow*(#1-\NormalSize)}pt}%
+}
+\DocsHeading{\section}{\thesection.}{\HeadingOne}
+\DocsHeading{\subsection}{\thesubsection}{\HeadingTwo}
+\DocsHeading{\subsubsection}{\thesubsubsection}{\HeadingThree}
+
+% ---------- Lists ----------
+% Like Google Docs: bullet/number at \ListLabelIndent, text (and wrapped
+% lines) at \ListTextIndent; nested levels step in by \ListTextIndent.
+% No gap between items; a normal paragraph gap before and after the list.
+% beginpenalty: never break a page between a list's intro line and its
+% first item (e.g. "...the following:" stays with item 1).
+\setlist{itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt, beginpenalty=10000,
+         leftmargin=\ListTextIndent pt,
+         labelwidth=\fpeval{\ListTextIndent-\ListLabelIndent}pt,
+         labelsep=0pt, align=left}
+\setlist[itemize,1]{label=\textbullet}
+\setlist[itemize,2]{label=$\circ$}
+\setlist[itemize,3]{label=$\scriptscriptstyle\blacksquare$}
+\setlist[enumerate,1]{label=\arabic*.}
+\setlist[enumerate,2]{label=\alph*.}
+\setlist[enumerate,3]{label=\roman*.}
+\setlist[description]{font=\bfseries, labelwidth=0pt, labelsep=0.5em,
+                      leftmargin=\ListTextIndent pt, align=left}
+
+% ---------- Indented paragraphs ----------
+% Like "Increase indent" in Google Docs:
+%   \begin{indented} ... \end{indented}       one step  (\ListTextIndent)
+%   \begin{indented}[2] ... \end{indented}    two steps
+\newenvironment{indented}[1][1]
+  {\par\setlength{\leftskip}{\fpeval{#1*\ListTextIndent}pt}}
+  {\par}
+\renewenvironment{quote}{\begin{indented}}{\end{indented}}
+
+% ---------- Equations ----------
+% Extra space between lines of align/gather so stacked fractions don't touch
+\setlength{\jot}{\fpeval{\NormalAfter/2}pt}
+
+% ---------- Footnotes ----------
+\renewcommand{\footnotesize}{\docssmall}
+
+% ---------- Captions ----------
+\makeatletter
+% Small text, bold label: "Table 1." / "Figure 1a."
+\DeclareCaptionFont{docssmall}{\docssmall}
+% Alignment from \CaptionStyle: caption text, and narrow figures/tables
+\ifdefstring{\CaptionStyle}{left}
+  {\newcommand{\Template@capalign}{justification=raggedright, singlelinecheck=false}%
+   \newcommand{\Template@floatalign}{\raggedright}}
+  {\ifdefstring{\CaptionStyle}{ieee}
+    {\newcommand{\Template@capalign}{justification=justified, singlelinecheck=true}}
+    {\newcommand{\Template@capalign}{justification=centering, singlelinecheck=false}}%
+   \newcommand{\Template@floatalign}{\centering}}
+% One caption style, defined once and used by captions and sub-captions
+% [ ] = how a caption that fits on one line is set (used with singlelinecheck)
+\edef\Template@tmp{\noexpand\DeclareCaptionStyle{docs}[justification=centering]{font=docssmall,
+  labelfont=bf, labelsep=period, skip=\FigureCaptionGap pt, \Template@capalign}}
+\Template@tmp
+\captionsetup{style=docs}
+% Tables: caption ABOVE.  Figures: caption BELOW.
+\captionsetup[table]{position=top, skip=\TableCaptionGap pt}
+\captionsetup[figure]{position=bottom}
+% Sub-figures: the same style, label "Figure 1a"
+\DeclareCaptionLabelFormat{subfull}{Figure~\thefigure#2}
+\captionsetup[sub]{style=docs, labelformat=subfull}
+\renewcommand{\thesubfigure}{\alph{subfigure}}
+\crefname{subfigure}{Figure}{Figures}
+% Between stacked sub-figures:  \end{subfigure} \subfiguregap \begin{subfigure}
+\newcommand{\subfiguregap}{\par\vspace{\SubfigureGap pt}}
+\makeatother
+
+% ---------- Narrow figures and tables ----------
+% Centred or at the left margin, from \CaptionStyle (full-width ones are
+% unaffected). LaTeX resets alignment inside the float box, so it is set there.
+\makeatletter
+\g@addto@macro\@floatboxreset{\Template@floatalign}
+\makeatother
+
+% ---------- Figure/table placement ----------
+% Standard LaTeX placement with two safeguards:
+%  - a figure/table goes where it is written if it fits ("here"), otherwise
+%    to the top of the next page, and the text fills the gap (no empty half
+%    pages);
+%  - it never appears before the place it is written (flafter), and never
+%    moves past the next numbered section, e.g. "3." (\FloatBarrier).
+% To force one to stay exactly where it is written: \begin{figure}[H].
+\usepackage{float}
+\usepackage{flafter}
+\usepackage{placeins}
+\floatplacement{figure}{htbp}
+\floatplacement{table}{htbp}
+\renewcommand{\topfraction}{0.85}       % a page top may be mostly figure
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.15}      % keep at least 15% text on a page
+\renewcommand{\floatpagefraction}{0.75} % figure-only pages must be fairly full
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+% A figure/table written directly after a heading (no text in between) stays
+% attached to that heading: it is placed right there, and if both don't fit,
+% they move to the next page together.
+\makeatletter
+\AtBeginEnvironment{figure}{\if@nobreak\def\fps@figure{H}\fi}
+\AtBeginEnvironment{table}{\if@nobreak\def\fps@table{H}\fi}
+\makeatother
+
+% ---------- Page breaks ----------
+% Never leave a single line of a paragraph alone at the bottom of a page
+% (orphan) or at the top of the next one (widow), like Google Docs'
+% "widow/orphan control". Pages may end slightly early instead.
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+% Headings are never left alone at the bottom of a page ("keep with next"):
+% a heading needs room for itself plus about two lines, otherwise new page.
+\usepackage{needspace}
+\makeatletter
+\let\Template@section\section
+\renewcommand{\section}{\FloatBarrier\Needspace{3\baselineskip}\Template@section}
+\let\Template@subsection\subsection
+\renewcommand{\subsection}{\Needspace{3\baselineskip}\Template@subsection}
+\let\Template@subsubsection\subsubsection
+\renewcommand{\subsubsection}{\Needspace{2.5\baselineskip}\Template@subsubsection}
+\makeatother
+
+% ---------- Float spacing ----------
+\setlength{\floatsep}{\FloatGap pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{\floatsep}
+\setlength{\intextsep}{\floatsep}
+% Pages holding only floats: stack from the top instead of spreading out.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{\floatsep}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+
+% ---------- Tables ----------
+% Docs cell = padding + one line (at \TableLineSpacing) + padding, with the
+% text centred; borders sit between rows. Each row gets exactly that height.
+\newcommand{\CellEdge}{\fpeval{\TableCellPadding
+  +(\TableLineSpacing-1)*\LoraHeight*\NormalSize/2}}  % padding + half the extra line space
+\newcommand{\CellAbove}{\fpeval{\CellEdge+(\LoraHeight-\LoraDescent)*\NormalSize}}
+\newcommand{\CellBelow}{\fpeval{\CellEdge+\LoraDescent*\NormalSize}}
+\makeatletter
+\newcommand{\Template@tablestrut}{%
+  % cell text at table line spacing (also for text that wraps in a cell)
+  \fontsize{\NormalSize}{\fpeval{\TableLineSpacing*\LoraHeight*\NormalSize}pt}\selectfont
+  \renewcommand{\arraystretch}{1}\setlength{\extrarowheight}{0pt}%
+  \setbox\strutbox\hbox{\vrule height \CellAbove pt depth \CellBelow pt width 0pt}}
+\makeatother
+\AtBeginEnvironment{tabular}{\csname Template@tablestrut\endcsname}
+\AtBeginEnvironment{tabular*}{\csname Template@tablestrut\endcsname}
+\AtBeginEnvironment{tabulary}{\csname Template@tablestrut\endcsname}
+% Left/right cell padding, same as top/bottom
+\setlength{\tabcolsep}{\TableCellPadding pt}
+% Borders: no extra space around rules, padding is already in the rows
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\setlength{\heavyrulewidth}{\TableOuterRule pt}   % \toprule, \bottomrule
+\setlength{\lightrulewidth}{\TableHeaderRule pt}  % \midrule
+\definecolor{TableRowRuleColor}{HTML}{\TableRowRuleColor}
+% Light line between body rows:  Row 1 \\ \rowline  Row 2 \\
+\newcommand{\rowline}{\arrayrulecolor{TableRowRuleColor}%
+  \midrule[\TableRowRule pt]\arrayrulecolor{black}}
+
+% ---------- Automatic table width ----------
+%   \begin{autotable}{L R R}  ...rows...  \end{autotable}
+% Column types:  L = text (left), R = numbers (right), C = centred.
+% The table is first measured at its natural width (+ \TableColumnGap per
+% column):
+%   content longer than the line   → full width; text (L) columns wrap, each
+%                                    getting width in proportion to its text;
+%                                    R/C columns keep their natural width
+%   wider than \TableFullAt × line → full width, extra space between columns
+%   narrower than \TableMinWidth   → widened to \TableMinWidth × line
+%   in between                     → natural width
+% Narrow tables are centred (see Narrow figures and tables).
+\usepackage{environ}
+\usepackage{tabulary}
+\setlength{\tymin}{\fpeval{\TableTextMin}\linewidth}
+\newlength{\autotablewidth}
+\ExplSyntaxOn
+\tl_new:N \l_template_plainspec_tl   % L R C → l r c   (natural width)
+\tl_new:N \l_template_wrapspec_tl    % L stays L (wraps), R C → r c
+\int_new:N \l_template_ncols_int
+\int_new:N \l_template_ntext_int
+\cs_new_protected:Npn \TemplateSpecs #1
+  {
+    \tl_set:Nn \l_template_wrapspec_tl {#1}
+    \tl_replace_all:Nnn \l_template_wrapspec_tl {R} {r}
+    \tl_replace_all:Nnn \l_template_wrapspec_tl {C} {c}
+    \tl_set_eq:NN \l_template_plainspec_tl \l_template_wrapspec_tl
+    \tl_replace_all:Nnn \l_template_plainspec_tl {L} {l}
+    \regex_count:nnN {[LRClrc]} {#1} \l_template_ncols_int
+    \regex_count:nnN {L} {#1} \l_template_ntext_int
+  }
+\cs_new:Npn \TemplateNcols { \int_use:N \l_template_ncols_int }
+\cs_new:Npn \TemplateNtext { \int_use:N \l_template_ntext_int }
+\cs_new_protected:Npn \TemplatePlainTabular #1
+  { \exp_args:NnV \begin {tabular} \l_template_plainspec_tl #1 \end{tabular} }
+\cs_new_protected:Npn \TemplateStretchedTabular #1 #2
+  {
+    \exp_args:Nnnx \begin {tabular*} {#1}
+      { @{\exp_not:N\extracolsep{\exp_not:N\fill}\exp_not:N\hspace{\exp_not:N\tabcolsep}}
+        \l_template_plainspec_tl }
+    #2 \end{tabular*}
+  }
+\cs_new_protected:Npn \TemplateWrappedTabular #1
+  { \exp_args:NnnV \begin {tabulary} {\linewidth} \l_template_wrapspec_tl #1 \end{tabulary} }
+\ExplSyntaxOff
+\makeatletter
+\NewEnviron{autotable}[1]{%
+  \TemplateSpecs{#1}%
+  \setbox\@ne\hbox{\TemplatePlainTabular{\BODY}}%
+  \setlength{\autotablewidth}{\dimexpr\wd\@ne+\TemplateNcols\dimexpr\TableColumnGap pt\relax\relax}%
+  \ifdim\wd\@ne>\linewidth
+    \ifnum\TemplateNtext>0
+      \TemplateWrappedTabular{\BODY}%       too long: wrap text columns
+    \else
+      \TemplateStretchedTabular{\linewidth}{\BODY}%
+    \fi
+  \else
+    \ifdim\autotablewidth>\fpeval{\TableFullAt}\linewidth
+      \setlength{\autotablewidth}{\linewidth}%
+    \else
+      \ifdim\autotablewidth<\fpeval{\TableMinWidth}\linewidth
+        \setlength{\autotablewidth}{\fpeval{\TableMinWidth}\linewidth}%
+      \fi
+    \fi
+    \TemplateStretchedTabular{\autotablewidth}{\BODY}%
+  \fi
+}
+\makeatother
+
+% ---------- Header / footer ----------
+\makeatletter
+% Page number bottom right. Course + author top right on page 1.
+\renewcommand{\headrulewidth}{0pt}
+\newcommand{\Template@pagenumber}{\fancyfoot[R]{\docssmall\thepage}}
+\fancypagestyle{plain}{\fancyhf{}\Template@pagenumber}
+\pagestyle{plain}
+\makeatother
+
+% ---------- Title block ----------
+\makeatletter
+\newcommand{\course}[1]{\def\@course{#1}}
+\def\@course{}
+\fancypagestyle{firstpage}{%
+  \fancyhf{}%
+  \fancyhead[R]{\docssmall\@course\\\@author}%
+  \Template@pagenumber}
+\renewcommand{\maketitle}{%
+  \thispagestyle{firstpage}%
+  {\centering\DocsSize{\TitleSize}\titleweight \@title\par}%
+  % next block's own "before" handles the gap; correct for title size
+  \vspace{\fpeval{max(\TitleAfter,\NormalAfter)-\NormalAfter
+                  +\DocsBelow*(\TitleSize-\NormalSize)}pt}%
+}
+\makeatother

@@ -1,0 +1,24 @@
+% =====================================================================
+%  test.tex — layout test document. Same style.tex as main.tex.
+%  Compile this file instead of main.tex to check every pattern.
+%  (Overleaf: Menu > Main document > test.tex)
+% =====================================================================
+\documentclass[11pt]{article}
+\input{style}
+
+\title{Layout Test Document}
+\author{Author Name}
+\course{Course Code Course Name}
+
+\begin{document}
+\maketitle
+\input{tests/t1-text}
+\input{tests/t2-lists}
+\input{tests/t3-tables}
+\input{tests/t4-figures}
+\input{tests/t5-combined}
+\input{tests/t6-math-misc}
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+\end{document}

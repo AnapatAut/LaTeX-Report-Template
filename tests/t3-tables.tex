@@ -1,0 +1,198 @@
+\section{Tables}
+
+\subsection{Table Between Paragraphs}
+
+Paragraph before the table.
+
+\begin{table}
+  \caption{Basic table between two paragraphs.}
+  \label{tab:t-basic}
+  \begin{autotable}{L R R}
+    \toprule
+    \textbf{Item} & \textbf{Count} & \textbf{Share} \\
+    \midrule
+    Alpha & 120 & 0.40 \\ \rowline
+    Beta  & 90  & 0.30 \\ \rowline
+    Gamma & 90  & 0.30 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+Paragraph after the table.
+
+\subsection{Table Directly After a Heading}
+
+\begin{table}
+  \caption{Table right after a heading, with wrapping text and a total row.}
+  \label{tab:t-wrap}
+  \begin{autotable}{L L R}
+    \toprule
+    \textbf{Method} & \textbf{Notes} & \textbf{Score} \\
+    \midrule
+    Baseline & Short note & 0.61 \\ \rowline
+    Improved method with a long name & A longer note that wraps onto a second
+      line inside the cell & 0.85 \\ \rowline
+    \textbf{Total} & & \textbf{1.46} \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Automatic Width}
+
+All tables below use the same \texttt{autotable}; only the content differs.
+
+\begin{table}
+  \caption{Two short columns: widened to the minimum width. This caption is
+           long on purpose, to check a long caption above a small table.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Key} & \textbf{Value} \\
+    \midrule
+    a & 1 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Medium content: natural width.}
+  \begin{autotable}{L R R}
+    \toprule
+    \textbf{Model} & \textbf{F1} & \textbf{AP} \\
+    \midrule
+    YOLO hand & 0.894 & 0.676 \\ \rowline
+    Hybrid    & 0.902 & 0.721 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Long text in a cell: full width, text wraps.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Observation} & \textbf{Count} \\
+    \midrule
+    A far dog lying at the same spot in five back-to-back clips is missed in every frame & 23 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Long Text Columns}
+
+\begin{table}
+  \caption{One long text column: it takes most of the width; the short name
+           column and the score column stay narrow.}
+  \begin{autotable}{L L R}
+    \toprule
+    \textbf{Method} & \textbf{Notes} & \textbf{Score} \\
+    \midrule
+    Baseline & COCO-pretrained detector used out of the box, keeping only the
+      class ``dog''; it finds most day dogs but almost none at night. & 0.71 \\ \rowline
+    Hybrid & Boxes from both detectors are fused into one box per dog with a
+      weighted mean, then linked over time with ByteTrack. & 0.91 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Two text columns of different length: widths follow the amount of
+           text in each.}
+  \begin{autotable}{L L R}
+    \toprule
+    \textbf{Idea} & \textbf{Result on val} & \textbf{Kept} \\
+    \midrule
+    Train on SAM3 boxes instead of hand labels & Better by day but clearly
+      worse at night than training on the hand labels, so the hand labels were
+      kept for all later models. & No \\ \rowline
+    SAM3 in bfloat16 & About twice as fast, with slightly lower AP50-95. & No \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Numbers and Text Together}
+
+\begin{table}
+  \caption{Mixed values in one column: set as text (L), left-aligned.}
+  \begin{autotable}{L L}
+    \toprule
+    \textbf{Model} & \textbf{Result} \\
+    \midrule
+    YOLO hand & 0.894 (best at night) \\ \rowline
+    Hybrid    & 0.902 \\ \rowline
+    SAM3      & 0.869, but slow (4.4 FPS) \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Better: the number and the note in separate columns, so the numbers
+           line up.}
+  \begin{autotable}{L R L}
+    \toprule
+    \textbf{Model} & \textbf{F1} & \textbf{Note} \\
+    \midrule
+    YOLO hand & 0.894 & best at night \\ \rowline
+    Hybrid    & 0.902 & \\ \rowline
+    SAM3      & 0.869 & slow (4.4 FPS) \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Values Like 0/12/334}
+
+\begin{table}
+  \caption{In one column (R): right-aligned, but the parts do not line up.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Model} & \textbf{Found/false/missed} \\
+    \midrule
+    YOLO COCO & 0/12/334 \\ \rowline
+    Hybrid    & 194/0/42 \\ \rowline
+    SAM3      & 15/0/21 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Better: one column per value under a grouped header, so every part
+           lines up.}
+  \begin{autotable}{L R R R}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{Day}} \\
+    \cmidrule(l){2-4}
+    \textbf{Model} & \textbf{Found} & \textbf{False} & \textbf{Missed} \\
+    \midrule
+    YOLO COCO & 0   & 12 & 334 \\ \rowline
+    Hybrid    & 194 & 0  & 42 \\ \rowline
+    SAM3      & 15  & 0  & 21 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Narrow Table and Grouped Header}
+
+\begin{table}
+  \caption{Grouped header (wide enough for full width).}
+  \begin{autotable}{L RR RR}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{Day}} & \multicolumn{2}{c}{\textbf{Night}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    \textbf{Model} & \textbf{Found} & \textbf{Missed} & \textbf{Found} & \textbf{Missed} \\
+    \midrule
+    A & 194 & 42 & 31 & 5 \\ \rowline
+    B & 189 & 47 & 15 & 21 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Table Then Heading}
+
+\begin{table}
+  \caption{Table directly followed by a heading.}
+  \begin{autotable}{L R}
+    \toprule
+    \textbf{Key} & \textbf{Value} \\
+    \midrule
+    x & 1 \\
+    \bottomrule
+  \end{autotable}
+\end{table}

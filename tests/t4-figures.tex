@@ -1,0 +1,125 @@
+\section{Figures}
+
+\subsection{Figure Between Paragraphs}
+
+Paragraph before the figure.
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=3.5cm]{example-image-a}
+  \caption{Single full-width figure between two paragraphs.}
+  \label{fig:t-single}
+\end{figure}
+
+Paragraph after the figure, referring to \cref{fig:t-single}.
+
+\subsection{Figure Directly After a Heading}
+
+\begin{figure}
+  \includegraphics[width=0.6\linewidth, height=3cm]{example-image-b}
+  \caption{A 60\% figure right after a heading.}
+\end{figure}
+
+\subsection{Narrow Figures: Widths and Captions}
+
+\begin{figure}
+  \includegraphics[width=0.3\linewidth]{example-image-a}
+  \caption{30\% width, short caption.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=0.5\linewidth]{example-image-b}
+  \caption{50\% width with a long caption that does not fit on one line, so it
+           is justified across the full text width (IEEE style).}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=0.75\linewidth, height=4cm]{example-image-c}
+  \caption{75\% width.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[height=6cm]{example-image-9x16}
+  \caption{Tall portrait image (sized by height), with a caption long enough to
+           need two lines below a narrow image.}
+\end{figure}
+
+Text after the narrow figures.
+
+\subsection{Full Width: Short and Long Captions}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=3cm]{example-image-a}
+  \caption{Short caption under a full-width figure.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=3cm]{example-image-b}
+  \caption{A long caption under a full-width figure. It explains what the
+           colours mean and what the reader should notice, so it wraps onto a
+           second line.}
+\end{figure}
+
+\subsection{Two Figures in a Row}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
+  \caption{First of two figures.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
+  \caption{Second figure directly after the first.}
+\end{figure}
+
+\subsection{Side by Side}
+
+\begin{figure}
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=3cm]{example-image-a}
+    \caption{Left image.}
+    \label{fig:t-left}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=3cm]{example-image-b}
+    \caption{Right image, with a caption long enough to wrap onto two lines.}
+    \label{fig:t-right}
+  \end{subfigure}
+\end{figure}
+
+\Cref{fig:t-left,fig:t-right} are side by side.
+
+\subsection{Grid of Four}
+
+\begin{figure}
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
+    \caption{Top left.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
+    \caption{Top right.}
+  \end{subfigure}
+  \subfiguregap
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image-c}
+    \caption{Bottom left.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image}
+    \caption{Bottom right.}
+  \end{subfigure}
+\end{figure}
+
+\subsection{Sub-figures With a Main Caption}
+
+\begin{figure}
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
+    \caption{Day.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\linewidth}
+    \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
+    \caption{Night.}
+  \end{subfigure}
+  \caption{A main caption for the whole figure, below its sub-figures.}
+\end{figure}

@@ -1,0 +1,85 @@
+\section{Data}
+\label{sec:data}
+
+\subsection{Source and Inventory}
+
+Describe where the data comes from, how much there is, and its properties
+(resolution, duration, dates). \Cref{tab:inventory} summarises the data.
+
+% ---- Table: caption ABOVE the table ----
+\begin{table}
+  \caption{Short title of the table. Add one sentence of context if needed.}
+  \label{tab:inventory}
+  \begin{autotable}{L R R}
+    \toprule
+    \textbf{Item} & \textbf{Count} & \textbf{Subset} \\
+    \midrule
+    Item A & 100 & 20 \\ \rowline
+    Item B & 50  & 5  \\ \rowline
+    Item C & 10  & 0  \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+Describe what makes the data difficult, with examples in
+\cref{fig:example-a,fig:example-b,fig:example-c,fig:example-d}.
+
+% ---- Sub-figures: "Figure 1a", "Figure 1b", ... caption BELOW each ----
+\begin{figure}
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth, height=4.5cm]{example-image-a}
+    \caption{First example. One sentence on what it shows.}
+    \label{fig:example-a}
+  \end{subfigure}
+
+  \subfiguregap
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth, height=4.5cm]{example-image-b}
+    \caption{Second example.}
+    \label{fig:example-b}
+  \end{subfigure}
+\end{figure}
+
+% Same figure continued on the next page (keeps the number, goes on to c, d)
+\begin{figure}
+  \ContinuedFloat
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth, height=4.5cm]{example-image-c}
+    \caption{Third example.}
+    \label{fig:example-c}
+  \end{subfigure}
+
+  \subfiguregap
+  \begin{subfigure}{\linewidth}
+    \includegraphics[width=\linewidth, height=4.5cm]{example-image}
+    \caption{Fourth example.}
+    \label{fig:example-d}
+  \end{subfigure}
+\end{figure}
+
+\subsection{Train/Val/Test Split}
+
+Explain how the data is split and why the split avoids leakage between
+training and evaluation (\cref{tab:split}).
+
+\begin{table}
+  \caption{Split summary.}
+  \label{tab:split}
+  \begin{autotable}{L R R R}
+    \toprule
+    \textbf{Split} & \textbf{Groups} & \textbf{Items} & \textbf{Frames} \\
+    \midrule
+    Train & 0 & 0 & 0 \\ \rowline
+    Val   & 0 & 0 & 0 \\ \rowline
+    Test  & 0 & 0 & 0 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Labels}
+
+Describe how labels were made and checked.
+
+\subsubsection{Labeling Rules}
+
+Use a third heading level only when a subsection needs its own parts.

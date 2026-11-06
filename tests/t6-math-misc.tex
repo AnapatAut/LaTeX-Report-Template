@@ -1,0 +1,26 @@
+\section{Equations and Other Elements}
+
+Inline math such as $F_1 = 2PR/(P+R)$ inside a sentence, then a numbered
+display equation:
+\begin{equation}
+  \text{IoU}(A,B) = \frac{|A \cap B|}{|A \cup B|}
+  \label{eq:t-iou}
+\end{equation}
+and a text line after it referring to \cref{eq:t-iou}. Several aligned
+equations:
+\begin{align}
+  P &= \frac{TP}{TP+FP}, \\
+  R &= \frac{TP}{TP+FN}.
+\end{align}
+
+A paragraph with a very long word or path:
+\texttt{runs/detect/yolo26m\_hand\_1280\_e150/weights/best.pt} and a long URL
+\url{https://github.com/example/organisation/repository/blob/main/README.md}.
+
+\subsection{Code Block}
+
+\begin{verbatim}
+python train.py --model yolo26m.pt --imgsz 1280 --epochs 150 --seed 0
+\end{verbatim}
+
+Paragraph after the code block.

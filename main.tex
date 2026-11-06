@@ -1,0 +1,32 @@
+% =====================================================================
+%  main.tex — report template
+%  Compile with LuaLaTeX (or XeLaTeX); pdfLaTeX stops with a message.
+%  Formatting: style.tex   Content: sections/*.tex   Images: figures/
+% =====================================================================
+\documentclass[11pt]{article}
+\input{style}
+
+\title{Report Title}
+\author{Author Name}
+\course{Course Code Course Name}
+
+\begin{document}
+\maketitle
+
+% Optional — uncomment for longer reports (about 10+ pages):
+% \tableofcontents
+% \listoftables
+% \listoffigures
+% \clearpage
+
+\input{sections/introduction}
+\input{sections/data}
+\input{sections/method}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\bibliographystyle{ieeetr}   % numbered [1], [2] in order of first citation
+\bibliography{references}
+
+\end{document}

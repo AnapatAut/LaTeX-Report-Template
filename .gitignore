@@ -1,0 +1,16 @@
+# LaTeX build files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.out
+*.blg
+*.bbl
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+
+# Built PDFs (rebuild with latexmk)
+*.pdf
+!figures/**/*.pdf
