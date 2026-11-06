@@ -16,7 +16,7 @@
 % =====================================================================
 
 % ---- Line spacing (Google Docs: Format > Line spacing) ----
-\newcommand{\DocsLineSpacing}{1.5}
+\newcommand{\DocsLineSpacing}{1.15}
 
 % ---- Text sizes, pt ----
 \newcommand{\NormalSize}{11}    % Normal text
@@ -28,12 +28,12 @@
 \newcommand{\TitleAfter}{4}     % Title, after          (before = 0)
 \newcommand{\SubtitleAfter}{12} % Subtitle (captions), after: sub-figure caption → next image
 \newcommand{\SubfigureSideGap}{18}% space between side-by-side sub-figures
-\newcommand{\CaptionGap}{10}    % space between a figure/table and its own caption
+\newcommand{\CaptionGap}{8}    % space between a figure/table and its own caption
                                 % (same for both; edge of image/table → caption text)
 % Headings: size, before, after  → applied with \DocsHeading below
 \newcommand{\HeadingOne}  {{14}{16}{4}}
 \newcommand{\HeadingTwo}  {{12}{4}{4}}
-\newcommand{\HeadingThree}{{11}{4}{0}}
+\newcommand{\HeadingThree}{{11}{4}{4}}
 
 % ---- Fonts (files in fonts/) ----
 % Weights: Regular, Medium, SemiBold, Bold
@@ -48,10 +48,8 @@
 \newcommand{\TableHeaderRule}{0.75} % border under the header row, pt, black
 \newcommand{\TableRowRule}{0.5}     % border between rows, pt
 \newcommand{\TableRowRuleColor}{EFEFEF}  % Docs "light gray 2"
-% Automatic width (autotable): measured from the table's content
-\newcommand{\TableFullAt}{0.6}  % content wider than this share of the line → full width
-\newcommand{\TableMinWidth}{0.4}% content narrower than this → widened to this share
-\newcommand{\TableColumnGap}{24}% extra space per column in a narrow table, pt
+% Automatic width (autotable): the table is as wide as its content
+\newcommand{\TableColumnGap}{24}% space between the content of two columns, pt
 \newcommand{\TableTextMin}{0.2} % a wrapping text column is never narrower than
                                 % this share of the line; shorter ones stay natural
 
@@ -91,7 +89,7 @@
 \newcommand{\LoraDescent}{0.274}
 % \DocsPitch[line spacing]{size}; line spacing defaults to \DocsLineSpacing
 \NewExpandableDocumentCommand{\DocsPitch}{O{\DocsLineSpacing} m}
-  {\fpeval{#1*\LoraHeight*#2}}  % {11} -> 21.12
+  {\fpeval{#1*\LoraHeight*#2}}  % e.g. 1.15 x 1.28 x 11 = 16.19 pt
 \newcommand{\DocsBelow}{\fpeval{(\DocsLineSpacing-1)*\LoraHeight/2+\LoraDescent}}
 % Set a font size with its Docs line height:  \DocsSize{9}, \DocsSize[1]{11}
 \newcommand{\DocsSize}[2][\DocsLineSpacing]{\fontsize{#2}{\DocsPitch[#1]{#2}pt}\selectfont}
@@ -101,9 +99,13 @@
 % ---------- How Google Docs places images (measured from your PDF, 0.25 pt steps) ----------
 \newcommand{\DocsImageAbove}{3.25}   % paragraph top  → image top
 % ---------- How LaTeX places captions (measured, 0.25 pt steps) ----------
-\newcommand{\LatexCaptionTop}{5.5}     % caption skip → caption text top
-\newcommand{\LatexCaptionBottom}{3.75}  % caption text bottom → next gap
-\newcommand{\LatexTableCaption}{2.75}   % caption text bottom → table top
+% Measured at line spacing 1.5, and at 1.0, 1.15 and 2.0 to get how each
+% grows with the caption's line height (\CaptionLineDelta), so the caption
+% gaps stay the same at any \DocsLineSpacing.
+\newcommand{\CaptionLineDelta}{(\DocsPitch{\SubtitleSize}-\DocsPitch[1.5]{\SubtitleSize})}
+\newcommand{\LatexCaptionTop}{\fpeval{5.5+0.69*\CaptionLineDelta}}     % caption skip → caption text top
+\newcommand{\LatexCaptionBottom}{\fpeval{3.75+0.30*\CaptionLineDelta}} % caption text bottom → next gap
+\newcommand{\LatexTableCaption}{\fpeval{2.75+0.28*\CaptionLineDelta}}  % caption text bottom → table top
 
 % ---------- Caption gaps, converted to LaTeX ----------
 % image → its caption below  (LaTeX adds \LatexCaptionTop itself)
@@ -177,9 +179,10 @@
 % Converts Docs size/before/after to LaTeX, assuming Normal text
 % above and below the heading.
 % \DocsHeading{level}{number format}{\HeadingOne}
+\makeatletter
 \newcommand{\DocsHeading}[3]{\expandafter\DocsHeadingAux#3{#1}{#2}}
 \newcommand{\DocsHeadingAux}[5]{% size, before, after, level, number
-  \titleformat{#4}{\DocsSize{#1}\bfseries}{#5}{0.35em}{}%
+  \titleformat{#4}{\DocsSize{#1}\bfseries}{#5}{0.35em}{}[\global\Template@floatlastfalse]%
   \titlespacing*{#4}{0pt}
     {\fpeval{max(\NormalAfter,#2)-\NormalAfter+\DocsBelow*(\NormalSize-#1)}pt}
     {\fpeval{max(#3,0)-\NormalAfter+\DocsBelow*(#1-\NormalSize)}pt}%
@@ -187,6 +190,7 @@
 \DocsHeading{\section}{\thesection.}{\HeadingOne}
 \DocsHeading{\subsection}{\thesubsection}{\HeadingTwo}
 \DocsHeading{\subsubsection}{\thesubsubsection}{\HeadingThree}
+\makeatother
 
 % ---------- Table of contents, lists of tables/figures ----------
 % Compact entries: \TocLineSpacing, no paragraph gap, \TocSectionBefore
@@ -308,6 +312,7 @@
 \newdimen\Template@linebelow
 \setlength{\Template@linebelow}{\fpeval{\DocsBelow*\NormalSize}pt}
 \newif\ifTemplate@afterheading
+\newif\ifTemplate@floatlast   % last thing placed was a figure/table, not a heading
 % "here" placement (LaTeX's own)
 \patchcmd{\@addtocurcol}
   {\vskip \intextsep \box\@currbox \penalty\interlinepenalty \vskip\intextsep
@@ -324,7 +329,8 @@
    \ifTemplate@afterheading\else\ifdim\prevdepth>-1000pt
      \vskip\dimexpr\Template@linebelow-\prevdepth\relax\fi\fi}{}
   {\errmessage{style.tex: could not patch \string\float@endH}}
-\apptocmd{\float@endH}{\prevdepth\Template@linebelow\kern-\parskip}{}
+\apptocmd{\float@endH}{\prevdepth\Template@linebelow\kern-\parskip
+  \global\Template@floatlasttrue}{}
   {\errmessage{style.tex: could not patch \string\float@endH}}
 \makeatother
 \floatplacement{figure}{htbp}
@@ -356,14 +362,20 @@
 \raggedbottom
 % Headings are never left alone at the bottom of a page ("keep with next"):
 % a heading needs room for itself plus about two lines, otherwise new page.
+% A heading directly after another heading skips the check (it would break
+% the page between the two); the headings above it already keep the block
+% together.
 \usepackage{needspace}
 \makeatletter
+\newcommand{\Template@keepwithnext}[1]{%
+  \if@nobreak\ifTemplate@floatlast\Needspace{#1\baselineskip}\fi
+  \else\Needspace{#1\baselineskip}\fi}
 \let\Template@section\section
-\renewcommand{\section}{\FloatBarrier\Needspace{3\baselineskip}\Template@section}
+\renewcommand{\section}{\FloatBarrier\Template@keepwithnext{3}\Template@section}
 \let\Template@subsection\subsection
-\renewcommand{\subsection}{\Needspace{3\baselineskip}\Template@subsection}
+\renewcommand{\subsection}{\Template@keepwithnext{3}\Template@subsection}
 \let\Template@subsubsection\subsubsection
-\renewcommand{\subsubsection}{\Needspace{2.5\baselineskip}\Template@subsubsection}
+\renewcommand{\subsubsection}{\Template@keepwithnext{2.5}\Template@subsubsection}
 \makeatother
 
 % ---------- Tables ----------
@@ -383,8 +395,10 @@
 \AtBeginEnvironment{tabular}{\csname Template@tablestrut\endcsname}
 \AtBeginEnvironment{tabular*}{\csname Template@tablestrut\endcsname}
 \AtBeginEnvironment{tabulary}{\csname Template@tablestrut\endcsname}
-% Left/right cell padding, same as top/bottom
-\setlength{\tabcolsep}{\TableCellPadding pt}
+% Between the content of two columns \TableColumnGap; at the table's left
+% and right edges the cell padding (autotable adds it with \TemplatePad)
+\setlength{\tabcolsep}{\fpeval{\TableColumnGap/2}pt}
+\newcommand{\TemplatePad}{\hspace{\TableCellPadding pt}}
 % Borders: no extra space around rules, padding is already in the rows
 \setlength{\aboverulesep}{0pt}
 \setlength{\belowrulesep}{0pt}
@@ -398,23 +412,17 @@
 % ---------- Automatic table width ----------
 %   \begin{autotable}{L R R}  ...rows...  \end{autotable}
 % Column types:  L = text (left), R = numbers (right), C = centred.
-% The table is first measured at its natural width (+ \TableColumnGap per
-% column):
-%   content longer than the line   → full width; text (L) columns wrap, each
-%                                    getting width in proportion to its text;
-%                                    R/C columns keep their natural width
-%   wider than \TableFullAt × line → full width, extra space between columns
-%   narrower than \TableMinWidth   → widened to \TableMinWidth × line
-%   in between                     → natural width
-% Narrow tables are centred (see Narrow figures and tables).
+% The table is as wide as its content, with \TableColumnGap between the
+% content of neighbouring columns. If that is wider than the line, it is set
+% to full width and its text (L) columns wrap, each getting width in
+% proportion to its text; R/C columns keep their natural width.
+% Tables narrower than the line are centred (see Narrow figures and tables).
 \usepackage{environ}
 \usepackage{tabulary}
 \setlength{\tymin}{\fpeval{\TableTextMin}\linewidth}
-\newlength{\autotablewidth}
 \ExplSyntaxOn
 \tl_new:N \l_template_plainspec_tl   % L R C → l r c   (natural width)
 \tl_new:N \l_template_wrapspec_tl    % L stays L (wraps), R C → r c
-\int_new:N \l_template_ncols_int
 \int_new:N \l_template_ntext_int
 \cs_new_protected:Npn \TemplateSpecs #1
   {
@@ -423,43 +431,41 @@
     \tl_replace_all:Nnn \l_template_wrapspec_tl {C} {c}
     \tl_set_eq:NN \l_template_plainspec_tl \l_template_wrapspec_tl
     \tl_replace_all:Nnn \l_template_plainspec_tl {L} {l}
-    \regex_count:nnN {[LRClrc]} {#1} \l_template_ncols_int
     \regex_count:nnN {L} {#1} \l_template_ntext_int
   }
-\cs_new:Npn \TemplateNcols { \int_use:N \l_template_ncols_int }
 \cs_new:Npn \TemplateNtext { \int_use:N \l_template_ntext_int }
 \cs_new_protected:Npn \TemplatePlainTabular #1
-  { \exp_args:NnV \begin {tabular} \l_template_plainspec_tl #1 \end{tabular} }
+  {
+    \exp_args:Nnx \begin {tabular}
+      { @{\exp_not:N\TemplatePad} \l_template_plainspec_tl @{\exp_not:N\TemplatePad} }
+    #1 \end{tabular}
+  }
 \cs_new_protected:Npn \TemplateStretchedTabular #1 #2
   {
     \exp_args:Nnnx \begin {tabular*} {#1}
-      { @{\exp_not:N\extracolsep{\exp_not:N\fill}\exp_not:N\hspace{\exp_not:N\tabcolsep}}
-        \l_template_plainspec_tl }
+      { @{\exp_not:N\extracolsep{\exp_not:N\fill}\exp_not:N\TemplatePad}
+        \l_template_plainspec_tl @{\exp_not:N\TemplatePad} }
     #2 \end{tabular*}
   }
 \cs_new_protected:Npn \TemplateWrappedTabular #1
-  { \exp_args:NnnV \begin {tabulary} {\linewidth} \l_template_wrapspec_tl #1 \end{tabulary} }
+  {
+    \exp_args:Nnnx \begin {tabulary} {\linewidth}
+      { @{\exp_not:N\TemplatePad} \l_template_wrapspec_tl @{\exp_not:N\TemplatePad} }
+    #1 \end{tabulary}
+  }
 \ExplSyntaxOff
 \makeatletter
 \NewEnviron{autotable}[1]{%
   \TemplateSpecs{#1}%
   \setbox\@ne\hbox{\TemplatePlainTabular{\BODY}}%
-  \setlength{\autotablewidth}{\dimexpr\wd\@ne+\TemplateNcols\dimexpr\TableColumnGap pt\relax\relax}%
   \ifdim\wd\@ne>\linewidth
     \ifnum\TemplateNtext>0
       \TemplateWrappedTabular{\BODY}%       too long: wrap text columns
     \else
-      \TemplateStretchedTabular{\linewidth}{\BODY}%
+      \TemplateStretchedTabular{\linewidth}{\BODY}% numbers only: cannot wrap
     \fi
   \else
-    \ifdim\autotablewidth>\fpeval{\TableFullAt}\linewidth
-      \setlength{\autotablewidth}{\linewidth}%
-    \else
-      \ifdim\autotablewidth<\fpeval{\TableMinWidth}\linewidth
-        \setlength{\autotablewidth}{\fpeval{\TableMinWidth}\linewidth}%
-      \fi
-    \fi
-    \TemplateStretchedTabular{\autotablewidth}{\BODY}%
+    \usebox\@ne%                            natural width
   \fi
 }
 \makeatother

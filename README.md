@@ -34,22 +34,24 @@ latexmk -c            # remove build files
 - `figures/`: your images
 - `references.bib`: sources (BibTeX)
 - `test.tex` + `tests/*.tex`: layout test document (see below)
+- `scripts/check.py`: automatic checks after a change (see below)
 
 ## Settings (Google Docs values)
-Line spacing 1.5 for all text styles.
+Line spacing 1.15 (the Google Docs default) for all text styles.
 
 | Style | Size | Before | After | Font |
 |---|---|---|---|---|
 | Title | 18 | 0 | 4 | Lora Medium |
 | Heading 1 | 14 | 16 | 4 | Lora SemiBold |
 | Heading 2 | 12 | 4 | 4 | Lora SemiBold |
-| Heading 3 | 11 | 4 | 0 | Lora SemiBold |
+| Heading 3 | 11 | 4 | 4 | Lora SemiBold |
 | Normal text | 11 | 0 | 12 | Lora Regular |
 | Subtitle (captions, header, page number, footnotes) | 9 | | | Lora Regular, SemiBold label |
 
 Lists: bullet/number at 0.25 in, text at 0.5 in, each level +0.5 in.
-Tables: single line spacing, 5 pt cell padding, 1.5 pt top/bottom border,
-0.75 pt under the header, 0.5 pt `#EFEFEF` between rows.
+Tables: single line spacing, 5 pt cell padding at the edges, 24 pt between
+columns, 1.5 pt top/bottom border, 0.75 pt under the header, 0.5 pt `#EFEFEF`
+between rows.
 Contents and lists of tables/figures: single line spacing, 6 pt before each
 section entry, section numbers as in the headings.
 Code and URLs: Latin Modern Mono, scaled to Lora's lowercase height.
@@ -129,10 +131,10 @@ after the last sub-figure if the whole figure needs one.
   \end{autotable}
 \end{table}
 ```
+- the table is as wide as its content, with 24 pt between the content of
+  neighbouring columns (`\TableColumnGap`), and centred
 - content longer than the line → full width; text (`L`) columns wrap and get
   width in proportion to their text; number (`R`) columns stay narrow
-- content wider than 60% of the line → full width, no wrapping
-- narrower than 40% → widened to 40%; otherwise natural width
 
 Choosing column types:
 - text, or a mix like "0.869, but slow" → `L`
@@ -171,13 +173,16 @@ Inline: `$F_1 = 2PR/(P+R)$`.
 ## Changing the look
 All values are in the SETTINGS block at the top of `style.tex`, in Google Docs
 terms. Common changes:
+- line spacing: `\DocsLineSpacing` (1.15; use 1.5 if a course asks for it).
+  Headings, captions and figure gaps follow it; table cells and the contents
+  keep their own spacing
 - A4 paper: in `\PageSetup`, change `letterpaper` to `a4paper`
 - justified text: delete the `\AtBeginDocument{\raggedright}` line
 - caption alignment: `\CaptionStyle` (see Captions below)
 - bold weight: `\BoldWeight` (`SemiBold` or `Bold`)
 
 ## Captions (IEEE / NeurIPS / ICML convention)
-Table captions above, figure captions below, 10 pt from the table/figure.
+Table captions above, figure captions below, 8 pt from the table/figure.
 Figures and tables sit 18 pt from the text above and below (`\FloatGap`).
 Narrow tables and figures are centred. A one-line caption is centred; a longer
 one is justified across the full text width. `\CaptionStyle` also offers
@@ -202,6 +207,33 @@ figures first), `\begin{figure}[H]` (pin a figure exactly where it is written).
 indents, lists, tables, figures, combinations, equations, code, page breaks.
 On Overleaf: Menu → Main document → `test.tex`; switch back to `main.tex` for
 the report.
+
+## Checking changes
+After changing `style.tex` or the tests, run:
+```sh
+python3 scripts/check.py             # about 10 s
+python3 scripts/check.py --full      # also README examples and the widow test
+python3 scripts/check.py --render    # also page images in build/pages/
+python3 scripts/check.py --selftest  # proves the checks work (about 40 s)
+```
+It rebuilds both documents from scratch into `build/` and checks:
+- no errors, warnings or overfull/underfull boxes;
+- no manual formatting in `sections/` and `tests/`;
+- no page ends with a heading, no widows or orphans;
+- spacing measured on the page: captions at `\CaptionGap`, figures and
+  tables about one paragraph gap from the text, all three heading levels the
+  same distance from their text, even table cell padding, no gap over 32 pt.
+
+`--selftest` runs the page-flow detectors on made-up pages, then runs the
+checks on temporary copies of the repo: the clean copy must pass, and each
+copy with one deliberate fault (build error, `\small` in a test file, wide
+figure gap, Heading 3 with no space after, wrong caption offset, uneven cell
+padding, widow control off, broken README example) must fail the matching
+check. Run it after changing `scripts/check.py`.
+
+Exit code 0 means all passed. Needs poppler-utils (`pdftohtml`, `pdftoppm`);
+the spacing checks and page images also need Pillow (`python3-pil`). Look at
+the page images before committing a visual change.
 
 ## Limitations
 - A table cannot continue on the next page. A table taller than the page

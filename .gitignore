@@ -14,3 +14,6 @@
 # Built PDFs (rebuild with latexmk)
 *.pdf
 !figures/**/*.pdf
+
+# scripts/check.py output
+build/

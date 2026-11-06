@@ -42,7 +42,7 @@ Paragraph after the table.
 All tables below use the same \texttt{autotable}; only the content differs.
 
 \begin{table}
-  \caption{Two short columns: widened to the minimum width. This caption is
+  \caption{Two short columns: as narrow as their content. This caption is
            long on purpose, to check a long caption above a small table.}
   \begin{autotable}{L R}
     \toprule
@@ -171,7 +171,7 @@ All tables below use the same \texttt{autotable}; only the content differs.
 \subsection{Narrow Table and Grouped Header}
 
 \begin{table}
-  \caption{Grouped header (wide enough for full width).}
+  \caption{Grouped header with two groups.}
   \begin{autotable}{L RR RR}
     \toprule
     & \multicolumn{2}{c}{\textbf{Day}} & \multicolumn{2}{c}{\textbf{Night}} \\
@@ -180,6 +180,53 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \midrule
     A & 194 & 42 & 31 & 5 \\ \rowline
     B & 189 & 47 & 15 & 21 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\subsection{Many Text Columns}
+
+\begin{table}
+  \caption{Four text columns, all with long text: widths are shared out so
+           the longest cells wrap to a similar number of lines.}
+  \begin{autotable}{L L L L}
+    \toprule
+    \textbf{Approach} & \textbf{Data used} & \textbf{What happened} & \textbf{Why it was kept or dropped} \\
+    \midrule
+    Fine-tune the COCO detector on hand labels only &
+      All day and night clips from the first two weeks, about 1,800 frames &
+      Night recall rose from 0.12 to 0.55, day recall stayed about the same &
+      Kept, because it was the first model that found dogs at night at all \\ \rowline
+    Add SAM3 boxes as extra training labels &
+      The same clips plus 6,000 frames labelled by SAM3 without checking &
+      Better by day, clearly worse at night, with many false boxes on shadows &
+      Dropped, because night is the hard case and it got worse \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{One long text column and three short ones: the short columns
+           stay narrow and the long one takes the rest.}
+  \begin{autotable}{L L L L}
+    \toprule
+    \textbf{Clip} & \textbf{Light} & \textbf{Camera} & \textbf{What the detector missed and why} \\
+    \midrule
+    C01 & Night & Front gate & A dark dog lying still in the grass for the whole clip; it is the same colour as the ground and never moves, so neither the detector nor the tracker picks it up \\ \rowline
+    C07 & Day & Car park & Two dogs walking close together are merged into one box when they overlap \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\begin{table}
+  \caption{Text and number columns together: text columns wrap, number
+           columns keep their natural width.}
+  \begin{autotable}{L L L R R}
+    \toprule
+    \textbf{Model} & \textbf{Training data} & \textbf{Main failure} & \textbf{F1} & \textbf{AP} \\
+    \midrule
+    YOLO hand & Hand labels from all clips, day and night mixed & Small dogs far from the camera at night & 0.894 & 0.676 \\ \rowline
+    Hybrid & Hand labels plus tracker-filled gaps between labelled frames & Two dogs that overlap for a long time & 0.902 & 0.721 \\
     \bottomrule
   \end{autotable}
 \end{table}
