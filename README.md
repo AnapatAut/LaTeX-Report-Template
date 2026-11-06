@@ -32,7 +32,7 @@ latexmk -c            # remove build files
 - `sections/*.tex`: report content, one file per section (no formatting here)
 - `style.tex`: all formatting; every value is set once in its SETTINGS block
 - `figures/`: your images
-- `references.bib`: sources, cited with `\cite{key}`
+- `references.bib`: sources (BibTeX)
 - `test.tex` + `tests/*.tex`: layout test document (see below)
 
 ## Settings (Google Docs values)
@@ -50,10 +50,42 @@ Line spacing 1.5 for all text styles.
 Lists: bullet/number at 0.25 in, text at 0.5 in, each level +0.5 in.
 Tables: single line spacing, 5 pt cell padding, 1.5 pt top/bottom border,
 0.75 pt under the header, 0.5 pt `#EFEFEF` between rows.
-Contents and lists of tables/figures (uncomment in `main.tex`): single line
-spacing, 6 pt before each section entry, section numbers as in the headings.
+Contents and lists of tables/figures: single line spacing, 6 pt before each
+section entry, section numbers as in the headings.
+Code and URLs: Latin Modern Mono, scaled to Lora's lowercase height.
 
 ## Writing content
+Content files hold text and structure only. Every spacing, size and alignment
+comes from `style.tex`, so never add `\centering`, `\vspace`, `\small` or
+placement options like `[h]` / `[t]` (`[H]` only to pin one, see Page
+flow).
+
+**Title block** (`main.tex`): `\title{...}`, `\author{...}`, `\course{...}`.
+Course and author go top right on page 1. Add a section by creating
+`sections/name.tex` and adding `\input{sections/name}` to `main.tex`.
+
+**Headings**: `\section{...}` → "1. Title", `\subsection{...}` → "1.1",
+`\subsubsection{...}` → "1.1.1" (three levels). Label them to refer to them:
+`\label{sec:name}`.
+
+**Text**: a blank line starts a new paragraph. `\textbf{...}` (SemiBold),
+`\textit{...}`, `\texttt{code}`, `\url{https://...}`, `\footnote{...}`.
+
+**References in text**: `\cref{fig:name}` → "Figure 1", also for tables,
+sections and equations (`\Cref` at the start of a sentence). Never type
+numbers.
+
+**Citations**: add BibTeX entries to `references.bib` and cite with
+`\cite{key}` → "[1]". Numbered in order of first citation (IEEE style); the
+References list is printed at the end.
+
+**Lists**: `itemize` (• ◦ ▪), `enumerate` (1. a. i.), up to three levels;
+`description` for term + definition (`\item[Term] ...`). For a bold lead-in,
+start the item with `\textbf{Lead-in.}`.
+
+**Indent**: `\begin{indented} ... \end{indented}` (like "Increase indent"),
+`\begin{indented}[2]` for two steps; `quote` uses one step.
+
 **Figure**
 ```latex
 \begin{figure}
@@ -61,6 +93,28 @@ spacing, 6 pt before each section entry, section numbers as in the headings.
   \caption{...}  \label{fig:name}
 \end{figure}
 ```
+**Sub-figures** ("Figure 2a", "Figure 2b"): side by side, `\subwidth{n}` is
+the width of one of n in a row, `\hfill` between them. Add a main caption
+after the last sub-figure if the whole figure needs one.
+```latex
+\begin{figure}
+  \begin{subfigure}[t]{\subwidth{2}}
+    \includegraphics[width=\linewidth]{left}
+    \caption{...}  \label{fig:left}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{\subwidth{2}}
+    \includegraphics[width=\linewidth]{right}
+    \caption{...}  \label{fig:right}
+  \end{subfigure}
+  % \caption{Main caption for the whole figure.}
+\end{figure}
+```
+- more rows (a grid): put `\subfiguregap` between the rows
+- stacked full-width sub-figures: `\begin{subfigure}{\linewidth}`, with
+  `\subfiguregap` between them
+- a figure continued on the next page (same number, goes on to c, d): start
+  the second `figure` with `\ContinuedFloat`; see `sections/data.tex`
+
 **Table**: the width is chosen from the content
 ```latex
 \begin{table}
@@ -84,15 +138,47 @@ Choosing column types:
 - text, or a mix like "0.869, but slow" → `L`
 - numbers → `R`; better still, put a number and its note in separate columns
   so the numbers line up
+- a total or best row: `\textbf{...}` in each cell
 - grouped values like `194/0/42` → one `R` column per value under a grouped
-  header (`\multicolumn` + `\cmidrule`), so every part lines up; see
-  `tests/t3-tables.tex`
+  header, so every part lines up:
+```latex
+  \begin{autotable}{L RR RR}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{Day}} & \multicolumn{2}{c}{\textbf{Night}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    \textbf{Model} & \textbf{Found} & \textbf{Missed} & \textbf{Found} & \textbf{Missed} \\
+    \midrule
+    A & 194 & 42 & 31 & 5 \\ \rowline
+    B & 189 & 47 & 15 & 21 \\
+    \bottomrule
+  \end{autotable}
+```
 
-**References in text**: `\cref{fig:name}` → "Figure 1". Never type numbers.
-**Indent**: `\begin{indented} ... \end{indented}` (like "Increase indent").
+**Equations**: numbered on the right, "(1)".
+```latex
+\begin{equation}
+  c = \frac{a + b}{2}  \label{eq:name}
+\end{equation}
+```
+Several lines aligned at `&`: `\begin{align} P &= ... \\ R &= ... \end{align}`.
+Inline: `$F_1 = 2PR/(P+R)$`.
+
+**Code block**: `\begin{verbatim} ... \end{verbatim}`, printed as typed.
+
+**Contents, list of tables, list of figures**: uncomment the four lines after
+`\maketitle` in `main.tex` (useful from about 10 pages).
+
+## Changing the look
+All values are in the SETTINGS block at the top of `style.tex`, in Google Docs
+terms. Common changes:
+- A4 paper: in `\PageSetup`, change `letterpaper` to `a4paper`
+- justified text: delete the `\AtBeginDocument{\raggedright}` line
+- caption alignment: `\CaptionStyle` (see Captions below)
+- bold weight: `\BoldWeight` (`SemiBold` or `Bold`)
 
 ## Captions (IEEE / NeurIPS / ICML convention)
 Table captions above, figure captions below, 10 pt from the table/figure.
+Figures and tables sit 18 pt from the text above and below (`\FloatGap`).
 Narrow tables and figures are centred. A one-line caption is centred; a longer
 one is justified across the full text width. `\CaptionStyle` also offers
 `centered` (all centred) and `left` (all at the left margin).
@@ -116,3 +202,10 @@ figures first), `\begin{figure}[H]` (pin a figure exactly where it is written).
 indents, lists, tables, figures, combinations, equations, code, page breaks.
 On Overleaf: Menu → Main document → `test.tex`; switch back to `main.tex` for
 the report.
+
+## Limitations
+- A table cannot continue on the next page. A table taller than the page
+  runs off the bottom with the warning "Float too large for page"; split it
+  into two tables.
+- Equations use Latin Modern (Lora has no math font).
+- XeLaTeX should work (same font loading), but only LuaLaTeX is tested.

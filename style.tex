@@ -27,6 +27,7 @@
 \newcommand{\NormalAfter}{12}   % Normal text, after   (before = 0)
 \newcommand{\TitleAfter}{4}     % Title, after          (before = 0)
 \newcommand{\SubtitleAfter}{12} % Subtitle (captions), after: sub-figure caption → next image
+\newcommand{\SubfigureSideGap}{18}% space between side-by-side sub-figures
 \newcommand{\CaptionGap}{10}    % space between a figure/table and its own caption
                                 % (same for both; edge of image/table → caption text)
 % Headings: size, before, after  → applied with \DocsHeading below
@@ -88,10 +89,12 @@
 % the LARGER of "after" (paragraph above) and "before" (paragraph below).
 \newcommand{\LoraHeight}{1.28}
 \newcommand{\LoraDescent}{0.274}
-\newcommand{\DocsPitch}[1]{\fpeval{\DocsLineSpacing*\LoraHeight*#1}}  % {11} -> 21.12
+% \DocsPitch[line spacing]{size}; line spacing defaults to \DocsLineSpacing
+\NewExpandableDocumentCommand{\DocsPitch}{O{\DocsLineSpacing} m}
+  {\fpeval{#1*\LoraHeight*#2}}  % {11} -> 21.12
 \newcommand{\DocsBelow}{\fpeval{(\DocsLineSpacing-1)*\LoraHeight/2+\LoraDescent}}
-% Set a font size with its Docs line height:  \DocsSize{9}
-\newcommand{\DocsSize}[1]{\fontsize{#1}{\DocsPitch{#1}pt}\selectfont}
+% Set a font size with its Docs line height:  \DocsSize{9}, \DocsSize[1]{11}
+\newcommand{\DocsSize}[2][\DocsLineSpacing]{\fontsize{#2}{\DocsPitch[#1]{#2}pt}\selectfont}
 % Space between a Docs line's top and its text, per size:  (pitch - size)/2
 \newcommand{\DocsTextOffset}[1]{\fpeval{(\DocsPitch{#1}-#1)/2}}
 
@@ -132,6 +135,10 @@
     BoldItalicFont = *-\BoldWeight Italic]
   \newfontfamily{\titleweight}{Lora-\TitleWeight}[Path=fonts/, Extension=.ttf,
                                        ItalicFont=Lora-\TitleWeight Italic]
+  % Code and URLs: Latin Modern Mono scaled to Lora's lowercase height,
+  % so inline code does not look smaller than the text around it
+  \setmonofont{lmmono10-regular.otf}[Scale=MatchLowercase,
+                                     ItalicFont=lmmono10-italic.otf]
 \fi
 
 % ---------- Body text ----------
@@ -160,6 +167,9 @@
 \usepackage{subcaption}
 \usepackage{titlesec}
 \usepackage{fancyhdr}
+\usepackage{float}      % [H] placement
+\usepackage{flafter}    % a float never appears before its source position
+\usepackage{placeins}   % \FloatBarrier
 \usepackage[hidelinks]{hyperref}
 \usepackage[nameinlink, capitalise, noabbrev]{cleveref}   % load last
 
@@ -186,7 +196,7 @@
 \newcommand{\Template@tocsetup}{%
   \vskip\NormalAfter pt\relax  % the heading's spacing counts on this gap
   \setlength{\parskip}{0pt}%
-  \fontsize{\NormalSize}{\fpeval{\TocLineSpacing*\LoraHeight*\NormalSize}pt}\selectfont}
+  \DocsSize[\TocLineSpacing]{\NormalSize}}
 \patchcmd{\@starttoc}{\makeatletter}{\makeatletter\Template@tocsetup}{}
   {\errmessage{style.tex: could not patch \string\@starttoc}}
 \patchcmd{\l@section}{\addvspace{1.0em \@plus\p@}}{\addvspace{\TocSectionBefore pt}}{}
@@ -214,8 +224,7 @@
 \setlist[enumerate,1]{label=\arabic*.}
 \setlist[enumerate,2]{label=\alph*.}
 \setlist[enumerate,3]{label=\roman*.}
-\setlist[description]{font=\bfseries, labelwidth=0pt, labelsep=0.5em,
-                      leftmargin=\ListTextIndent pt, align=left}
+\setlist[description]{font=\bfseries, labelwidth=0pt, labelsep=0.5em}
 
 % ---------- Indented paragraphs ----------
 % Like "Increase indent" in Google Docs:
@@ -261,6 +270,9 @@
 \crefname{subfigure}{Figure}{Figures}
 % Between stacked sub-figures:  \end{subfigure} \subfiguregap \begin{subfigure}
 \newcommand{\subfiguregap}{\par\vspace{\SubfigureGap pt}}
+% Width of one of n side-by-side sub-figures:  \begin{subfigure}[t]{\subwidth{2}}
+% (n widths + (n-1) \SubfigureSideGap = the line); separate them with \hfill
+\newcommand{\subwidth}[1]{\dimexpr(\linewidth-\SubfigureSideGap pt*\numexpr#1-1\relax)/#1\relax}
 \makeatother
 
 % ---------- Narrow figures and tables ----------
@@ -278,9 +290,43 @@
 %  - it never appears before the place it is written (flafter), and never
 %    moves past the next numbered section, e.g. "3." (\FloatBarrier).
 % To force one to stay exactly where it is written: \begin{figure}[H].
-\usepackage{float}
-\usepackage{flafter}
-\usepackage{placeins}
+\setlength{\floatsep}{\FloatGap pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{\floatsep}
+\setlength{\intextsep}{\floatsep}
+% Pages holding only floats: stack from the top instead of spreading out.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{\floatsep}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+% Space around a figure/table placed in the text: \FloatGap above and below,
+% measured like Google Docs from the edge of the text line (baseline +
+% \Template@linebelow), not from the baseline. Without this the gap above
+% is about 6 pt smaller than the gap below, and a heading after a figure
+% gets an extra paragraph gap.
+\makeatletter
+\newdimen\Template@linebelow
+\setlength{\Template@linebelow}{\fpeval{\DocsBelow*\NormalSize}pt}
+\newif\ifTemplate@afterheading
+% "here" placement (LaTeX's own)
+\patchcmd{\@addtocurcol}
+  {\vskip \intextsep \box\@currbox \penalty\interlinepenalty \vskip\intextsep
+   \ifnum\outputpenalty <-\@Mii \vskip -\parskip\fi}
+  {\vskip \intextsep \vskip\dimexpr\Template@linebelow-\@pagedp\relax
+   \box\@currbox \penalty\interlinepenalty
+   \vskip\intextsep \vskip\dimexpr\@pagedp-\Template@linebelow\relax
+   \ifnum\outputpenalty <-\@Mii \kern-\parskip\fi}{}
+  {\errmessage{style.tex: could not patch \string\@addtocurcol}}
+% [H] placement (float package); after a heading the heading's own spacing
+% already applies, so only the space below is adjusted
+\patchcmd{\float@endH}{\@endfloatbox\vskip\intextsep}
+  {\@endfloatbox\vskip\intextsep
+   \ifTemplate@afterheading\else\ifdim\prevdepth>-1000pt
+     \vskip\dimexpr\Template@linebelow-\prevdepth\relax\fi\fi}{}
+  {\errmessage{style.tex: could not patch \string\float@endH}}
+\apptocmd{\float@endH}{\prevdepth\Template@linebelow\kern-\parskip}{}
+  {\errmessage{style.tex: could not patch \string\float@endH}}
+\makeatother
 \floatplacement{figure}{htbp}
 \floatplacement{table}{htbp}
 \renewcommand{\topfraction}{0.85}       % a page top may be mostly figure
@@ -294,8 +340,10 @@
 % attached to that heading: it is placed right there, and if both don't fit,
 % they move to the next page together.
 \makeatletter
-\AtBeginEnvironment{figure}{\if@nobreak\def\fps@figure{H}\fi}
-\AtBeginEnvironment{table}{\if@nobreak\def\fps@table{H}\fi}
+\AtBeginEnvironment{figure}{\if@nobreak\def\fps@figure{H}\global\Template@afterheadingtrue
+  \else\global\Template@afterheadingfalse\fi}
+\AtBeginEnvironment{table}{\if@nobreak\def\fps@table{H}\global\Template@afterheadingtrue
+  \else\global\Template@afterheadingfalse\fi}
 \makeatother
 
 % ---------- Page breaks ----------
@@ -318,17 +366,6 @@
 \renewcommand{\subsubsection}{\Needspace{2.5\baselineskip}\Template@subsubsection}
 \makeatother
 
-% ---------- Float spacing ----------
-\setlength{\floatsep}{\FloatGap pt plus 2pt minus 2pt}
-\setlength{\textfloatsep}{\floatsep}
-\setlength{\intextsep}{\floatsep}
-% Pages holding only floats: stack from the top instead of spreading out.
-\makeatletter
-\setlength{\@fptop}{0pt}
-\setlength{\@fpsep}{\floatsep}
-\setlength{\@fpbot}{0pt plus 1fil}
-\makeatother
-
 % ---------- Tables ----------
 % Docs cell = padding + one line (at \TableLineSpacing) + padding, with the
 % text centred; borders sit between rows. Each row gets exactly that height.
@@ -339,7 +376,7 @@
 \makeatletter
 \newcommand{\Template@tablestrut}{%
   % cell text at table line spacing (also for text that wraps in a cell)
-  \fontsize{\NormalSize}{\fpeval{\TableLineSpacing*\LoraHeight*\NormalSize}pt}\selectfont
+  \DocsSize[\TableLineSpacing]{\NormalSize}%
   \renewcommand{\arraystretch}{1}\setlength{\extrarowheight}{0pt}%
   \setbox\strutbox\hbox{\vrule height \CellAbove pt depth \CellBelow pt width 0pt}}
 \makeatother

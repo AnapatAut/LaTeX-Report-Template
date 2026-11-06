@@ -40,7 +40,8 @@ Paragraph after the figure, referring to \cref{fig:t-single}.
 \begin{figure}
   \includegraphics[height=6cm]{example-image-9x16}
   \caption{Tall portrait image (sized by height), with a caption long enough to
-           need two lines below a narrow image.}
+    need two lines below a narrow image, so the caption runs wider than the
+    image itself.}
 \end{figure}
 
 Text after the narrow figures.
@@ -74,12 +75,12 @@ Text after the narrow figures.
 \subsection{Side by Side}
 
 \begin{figure}
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=3cm]{example-image-a}
     \caption{Left image.}
     \label{fig:t-left}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=3cm]{example-image-b}
     \caption{Right image, with a caption long enough to wrap onto two lines.}
     \label{fig:t-right}
@@ -91,20 +92,20 @@ Text after the narrow figures.
 \subsection{Grid of Four}
 
 \begin{figure}
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
     \caption{Top left.}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
     \caption{Top right.}
   \end{subfigure}
   \subfiguregap
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image-c}
     \caption{Bottom left.}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image}
     \caption{Bottom right.}
   \end{subfigure}
@@ -113,11 +114,11 @@ Text after the narrow figures.
 \subsection{Sub-figures With a Main Caption}
 
 \begin{figure}
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image-a}
     \caption{Day.}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.48\linewidth}
+  \begin{subfigure}[t]{\subwidth{2}}
     \includegraphics[width=\linewidth, height=2.5cm]{example-image-b}
     \caption{Night.}
   \end{subfigure}
