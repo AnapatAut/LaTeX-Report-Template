@@ -59,8 +59,8 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Model} & \textbf{F1} & \textbf{AP} \\
     \midrule
-    YOLO hand & 0.894 & 0.676 \\ \rowline
-    Hybrid    & 0.902 & 0.721 \\
+    Model A   & 0.894 & 0.676 \\ \rowline
+    Model B   & 0.902 & 0.721 \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -71,7 +71,7 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Observation} & \textbf{Count} \\
     \midrule
-    A far dog lying at the same spot in five back-to-back clips is missed in every frame & 23 \\
+    A small object at the same spot in five consecutive samples is missed in every image & 23 \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -85,10 +85,10 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Method} & \textbf{Notes} & \textbf{Score} \\
     \midrule
-    Baseline & COCO-pretrained detector used out of the box, keeping only the
-      class ``dog''; it finds most day dogs but almost none at night. & 0.71 \\ \rowline
-    Hybrid & Boxes from both detectors are fused into one box per dog with a
-      weighted mean, then linked over time with ByteTrack. & 0.91 \\
+    Baseline & Pretrained model used out of the box, keeping only the
+      target class; it finds most objects in bright images but almost none in dark ones. & 0.71 \\ \rowline
+    Ensemble & Results from both models are merged into one result per object with a
+      weighted mean, then linked over time by a tracking step. & 0.91 \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -100,10 +100,10 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Idea} & \textbf{Result on val} & \textbf{Kept} \\
     \midrule
-    Train on SAM3 boxes instead of hand labels & Better by day but clearly
-      worse at night than training on the hand labels, so the hand labels were
-      kept for all later models. & No \\ \rowline
-    SAM3 in bfloat16 & About twice as fast, with slightly lower AP50-95. & No \\
+    Train on generated labels instead of hand labels & Better on bright images but
+      clearly worse on dark ones than training on the hand labels, so the hand
+      labels were kept for all later models. & No \\ \rowline
+    Half-precision inference & About twice as fast, with slightly lower accuracy. & No \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -116,9 +116,9 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Model} & \textbf{Result} \\
     \midrule
-    YOLO hand & 0.894 (best at night) \\ \rowline
-    Hybrid    & 0.902 \\ \rowline
-    SAM3      & 0.869, but slow (4.4 FPS) \\
+    Model A   & 0.894 (best on dark images) \\ \rowline
+    Model B   & 0.902 \\ \rowline
+    Model C   & 0.869, but slow (4.4 FPS) \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -130,9 +130,9 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Model} & \textbf{F1} & \textbf{Note} \\
     \midrule
-    YOLO hand & 0.894 & best at night \\ \rowline
-    Hybrid    & 0.902 & \\ \rowline
-    SAM3      & 0.869 & slow (4.4 FPS) \\
+    Model A   & 0.894 & best on dark images \\ \rowline
+    Model B   & 0.902 & \\ \rowline
+    Model C   & 0.869 & slow (4.4 FPS) \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -145,9 +145,9 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Model} & \textbf{Found/false/missed} \\
     \midrule
-    YOLO COCO & 0/12/334 \\ \rowline
-    Hybrid    & 194/0/42 \\ \rowline
-    SAM3      & 15/0/21 \\
+    Baseline  & 0/12/334 \\ \rowline
+    Model A   & 194/0/42 \\ \rowline
+    Model B   & 15/0/21 \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -161,9 +161,9 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \cmidrule(lr){2-4}
     \textbf{Model} & \textbf{Found} & \textbf{False} & \textbf{Missed} \\
     \midrule
-    YOLO COCO & 0   & 12 & 334 \\ \rowline
-    Hybrid    & 194 & 0  & 42 \\ \rowline
-    SAM3      & 15  & 0  & 21 \\
+    Baseline  & 0   & 12 & 334 \\ \rowline
+    Model A   & 194 & 0  & 42 \\ \rowline
+    Model B   & 15  & 0  & 21 \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -193,14 +193,14 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Approach} & \textbf{Data used} & \textbf{What happened} & \textbf{Why it was kept or dropped} \\
     \midrule
-    Fine-tune the COCO detector on hand labels only &
-      All day and night clips from the first two weeks, about 1,800 frames &
-      Night recall rose from 0.12 to 0.55, day recall stayed about the same &
-      Kept, because it was the first model that found dogs at night at all \\ \rowline
-    Add SAM3 boxes as extra training labels &
-      The same clips plus 6,000 frames labelled by SAM3 without checking &
-      Better by day, clearly worse at night, with many false boxes on shadows &
-      Dropped, because night is the hard case and it got worse \\
+    Fine-tune the pretrained model on hand labels only &
+      All bright and dark samples from the first two weeks, about 1,800 images &
+      Dark recall rose from 0.12 to 0.55, bright recall stayed about the same &
+      Kept, because it was the first model that worked on dark images at all \\ \rowline
+    Add generated labels as extra training data &
+      The same samples plus 6,000 images labelled automatically without checking &
+      Better on bright images, clearly worse on dark ones, with many false results &
+      Dropped, because dark images are the hard case and they got worse \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -210,10 +210,10 @@ All tables below use the same \texttt{autotable}; only the content differs.
            stay narrow and the long one takes the rest.}
   \begin{autotable}{L L L L}
     \toprule
-    \textbf{Clip} & \textbf{Light} & \textbf{Camera} & \textbf{What the detector missed and why} \\
+    \textbf{Sample} & \textbf{Light} & \textbf{Site} & \textbf{What the model missed and why} \\
     \midrule
-    C01 & Night & Front gate & A dark dog lying still in the grass for the whole clip; it is the same colour as the ground and never moves, so neither the detector nor the tracker picks it up \\ \rowline
-    C07 & Day & Car park & Two dogs walking close together are merged into one box when they overlap \\
+    S01 & Dark & Entrance & A dark object lying still in the grass for the whole sequence; it is the same colour as the ground and never moves, so neither the model nor the tracking step picks it up \\ \rowline
+    S07 & Bright & Car park & Two objects moving close together are merged into one result when they overlap \\
     \bottomrule
   \end{autotable}
 \end{table}
@@ -225,8 +225,8 @@ All tables below use the same \texttt{autotable}; only the content differs.
     \toprule
     \textbf{Model} & \textbf{Training data} & \textbf{Main failure} & \textbf{F1} & \textbf{AP} \\
     \midrule
-    YOLO hand & Hand labels from all clips, day and night mixed & Small dogs far from the camera at night & 0.894 & 0.676 \\ \rowline
-    Hybrid & Hand labels plus tracker-filled gaps between labelled frames & Two dogs that overlap for a long time & 0.902 & 0.721 \\
+    Model A & Hand labels from all samples, bright and dark mixed & Small objects far from the camera in dark images & 0.894 & 0.676 \\ \rowline
+    Model B & Hand labels plus tracking-filled gaps between labelled images & Two objects that overlap for a long time & 0.902 & 0.721 \\
     \bottomrule
   \end{autotable}
 \end{table}

@@ -316,9 +316,9 @@ def check_all(root, full=False, images=False):
     if full:
         pdf, _ = build(root, "test", os.path.join(build_dir, "control"), jobname="control",
                        pre=r"\AtBeginDocument{\clubpenalty=0 \widowpenalty=0 \displaywidowpenalty=0}")
-        w = widows_orphans(read_pages(pdf))[0] if pdf else []
-        res.check(bool(w), "page-break test still produces a widow with the penalties off",
-                  "" if w else "retune paragraph lengths in tests/t7-page-breaks.tex")
+        w, o = widows_orphans(read_pages(pdf)) if pdf else ([], [])
+        res.check(bool(w and o), "page-break test makes a widow and an orphan with the penalties off",
+                  "" if w and o else "retune paragraph lengths in tests/t7-page-breaks.tex")
 
     print("Spacing")
     if not have_pil():

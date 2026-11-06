@@ -243,3 +243,8 @@ the page images before committing a visual change.
   into two tables.
 - Equations use Latin Modern (Lora has no math font).
 - XeLaTeX should work (same font loading), but only LuaLaTeX is tested.
+
+## License
+MIT (`LICENSE`): use and change the template freely; reports made with it
+need no notice. The Lora fonts in `fonts/` are under the SIL Open Font
+License (`fonts/Lora-OFL.txt`).
