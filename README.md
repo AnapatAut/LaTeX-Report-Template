@@ -216,7 +216,9 @@ python3 scripts/check.py --full      # also README examples and the widow test
 python3 scripts/check.py --render    # also page images in build/pages/
 python3 scripts/check.py --selftest  # proves the checks work (about 40 s)
 ```
-It rebuilds both documents from scratch into `build/` and checks:
+It rebuilds both documents from scratch into `build/` and deletes it again
+when everything passed; `build/` is kept when a check fails (logs to read) or
+with `--render`. It checks:
 - no errors, warnings or overfull/underfull boxes;
 - no manual formatting in `sections/` and `tests/`;
 - no page ends with a heading, no widows or orphans;

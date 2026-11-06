@@ -5,12 +5,14 @@
     python3 scripts/check.py --full      # also README examples and the widow test
     python3 scripts/check.py --render    # also page images in build/pages/ to look at
     python3 scripts/check.py --selftest  # prove the checks work: each one must
-                                         # catch a deliberately broken copy (~1 min)
+                                         # catch a deliberately broken copy (~40 s)
 
 Needs: latexmk + LuaLaTeX, poppler-utils (pdftohtml, pdftoppm).
 The spacing checks and --render also need Pillow (python3-pil); without it
-they are skipped with a note. Output goes to build/ (git-ignored), rebuilt
-from scratch on every run. Exit code 0 = all checks passed.
+they are skipped with a note. Builds go to build/ (git-ignored), rebuilt
+from scratch on every run and deleted afterwards, except when a check failed
+(logs to read) or with --render (page images to look at).
+Exit code 0 = all checks passed.
 """
 import argparse
 import glob
@@ -341,6 +343,10 @@ def check_all(root, full=False, images=False):
             print("  skip (needs Pillow)")
 
     print(f"\n{'All checks passed.' if not res.failed else f'{len(res.failed)} check(s) failed.'}")
+    if res.failed or images:
+        print(f"Build files kept in {build_dir}/")
+    else:
+        shutil.rmtree(build_dir, ignore_errors=True)
     return res.failed
 
 
