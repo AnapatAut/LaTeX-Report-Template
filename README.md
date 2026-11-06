@@ -50,6 +50,8 @@ Line spacing 1.5 for all text styles.
 Lists: bullet/number at 0.25 in, text at 0.5 in, each level +0.5 in.
 Tables: single line spacing, 5 pt cell padding, 1.5 pt top/bottom border,
 0.75 pt under the header, 0.5 pt `#EFEFEF` between rows.
+Contents and lists of tables/figures (uncomment in `main.tex`): single line
+spacing, 6 pt before each section entry, section numbers as in the headings.
 
 ## Writing content
 **Figure**
@@ -111,5 +113,6 @@ figures first), `\begin{figure}[H]` (pin a figure exactly where it is written).
 
 ## Layout test
 `test.tex` uses the same `style.tex` and shows every pattern: headings,
-indents, lists, tables, figures, combinations, equations, code. On Overleaf:
-Menu → Main document → `test.tex`; switch back to `main.tex` for the report.
+indents, lists, tables, figures, combinations, equations, code, page breaks.
+On Overleaf: Menu → Main document → `test.tex`; switch back to `main.tex` for
+the report.

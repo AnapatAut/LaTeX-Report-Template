@@ -67,6 +67,10 @@
 % left:     every caption left-aligned, figures/tables at the left margin
 \newcommand{\CaptionStyle}{ieee}
 
+% ---- Table of contents, list of tables/figures (only if used in main.tex)
+\newcommand{\TocLineSpacing}{1}    % line spacing of the entries (single)
+\newcommand{\TocSectionBefore}{6}  % space before each Heading 1 entry, pt
+
 % ---- Figures/tables ↔ surrounding text, pt (LaTeX only, no Docs equivalent)
 \newcommand{\FloatGap}{18}
 
@@ -173,6 +177,26 @@
 \DocsHeading{\section}{\thesection.}{\HeadingOne}
 \DocsHeading{\subsection}{\thesubsection}{\HeadingTwo}
 \DocsHeading{\subsubsection}{\thesubsubsection}{\HeadingThree}
+
+% ---------- Table of contents, lists of tables/figures ----------
+% Compact entries: \TocLineSpacing, no paragraph gap, \TocSectionBefore
+% above each section entry. Section numbers end with a period, as in the
+% headings ("1. Introduction").
+\makeatletter
+\newcommand{\Template@tocsetup}{%
+  \vskip\NormalAfter pt\relax  % the heading's spacing counts on this gap
+  \setlength{\parskip}{0pt}%
+  \fontsize{\NormalSize}{\fpeval{\TocLineSpacing*\LoraHeight*\NormalSize}pt}\selectfont}
+\patchcmd{\@starttoc}{\makeatletter}{\makeatletter\Template@tocsetup}{}
+  {\errmessage{style.tex: could not patch \string\@starttoc}}
+\patchcmd{\l@section}{\addvspace{1.0em \@plus\p@}}{\addvspace{\TocSectionBefore pt}}{}
+  {\errmessage{style.tex: could not patch \string\l@section}}
+\let\Template@lsection\l@section
+\renewcommand{\l@section}[2]{\begingroup
+  \let\Template@numberline\numberline
+  \renewcommand{\numberline}[1]{\Template@numberline{##1.}}%
+  \Template@lsection{#1}{#2}\endgroup}
+\makeatother
 
 % ---------- Lists ----------
 % Like Google Docs: bullet/number at \ListLabelIndent, text (and wrapped
