@@ -5,7 +5,7 @@
     python3 scripts/check.py --full      # also README examples and the widow test
     python3 scripts/check.py --render    # also page images in build/pages/ to look at
     python3 scripts/check.py --selftest  # prove the checks work: each one must
-                                         # catch a deliberately broken copy (~40 s)
+                                         # catch a deliberately broken copy (~1 min)
 
 Needs: latexmk + LuaLaTeX, poppler-utils (pdftohtml, pdftoppm).
 The spacing checks and --render also need Pillow (python3-pil); without it
@@ -38,8 +38,14 @@ FORBIDDEN = re.compile(
     r"|\\begin\{(center|flushleft|flushright|minipage|tabular)\}"
     r"|\\begin\{(figure|table)\}\[|\{0\.\d+\\linewidth\}\{|\\\\\[")
 NUMBERED = re.compile(r"^\d+(\.\d+)*\.?\s")
-FILLER = re.compile(r"^Paragraph [A-Z]\.")    # paragraphs in tests/t7-page-breaks.tex
-BODY_TOP, BODY_BOTTOM = 60, 725               # pt; outside = header and page number
+FILLER = re.compile(r"^Paragraph [A-Z]\.")    # paragraphs in tests/t7, t8
+# Widow control off. LaTeX copies \clubpenalty into \@clubpenalty at \begin{document}
+# and restores it after every heading, so both are set (after that copy)
+CONTROL = (r"\makeatletter\AtBeginDocument{\clubpenalty=0 \@clubpenalty=0 "
+           r"\widowpenalty=0 \displaywidowpenalty=0}\makeatother")
+LONGROW = re.compile(r"^((?:Sample|Item) \d\d)\b")  # rows of the long tables in tests/
+CONTINUED = re.compile(r"^Table \d+\. \(continued\)")
+BODY_TOP, FOOTER = 60, 67   # pt from the page top / bottom: header and page number
 
 
 # ---------------------------------------------------------------- results
@@ -74,6 +80,7 @@ def build(root, doc, outdir, jobname=None, pre=""):
     else:
         p = run(["latexmk", "-lualatex", "-interaction=nonstopmode", "-halt-on-error",
                  f"-outdir={outdir}", f"{doc}.tex"], root)
+    open(os.path.join(outdir, f"{job}.build.txt"), "w").write(p.stdout + p.stderr)
     logf = os.path.join(outdir, f"{job}.log")
     log = open(logf, errors="replace").read() if os.path.exists(logf) else p.stdout
     return (pdf if p.returncode == 0 and os.path.exists(pdf) else None), log
@@ -86,6 +93,7 @@ def read_pages(pdf):
                          capture_output=True, text=True).stdout
     fonts, pages = {}, []
     for page in re.findall(r"<page .*?</page>", xml, re.S):
+        bottom = int(re.search(r'height="(\d+)"', page).group(1)) / 1.5 - FOOTER
         for fid, size, fam in re.findall(r'<fontspec id="(\d+)" size="(\d+)" family="([^"]*)"', page):
             fonts[fid] = (int(size) / 1.5, bool(re.search(r"SemiBold|Bold", fam)))
         chunks = []
@@ -104,7 +112,7 @@ def read_pages(pdf):
         for top, _, _, parts in lines:
             parts.sort()
             size, bold = fonts[parts[0][1]]
-            if BODY_TOP < top < BODY_BOTTOM:
+            if BODY_TOP < top < bottom:
                 out.append((top, size, bold, " ".join(p[2] for p in parts)))
         pages.append(out)
     return pages
@@ -131,13 +139,41 @@ def stranded_headings(pages):
 
 def widows_orphans(pages):
     widows, orphans = [], []
-    for n, lines in content_pages(pages):
-        text = [l[3] for l in lines if l[1] > 10]       # without footnotes
-        if len(text) >= 2 and not FILLER.match(text[0]) and FILLER.match(text[1]):
+    body = [(n, [l for l in lines if l[1] > 10]) for n, lines in content_pages(pages)]  # no footnotes
+    for k, (n, lines) in enumerate(body):
+        text = [l[3] for l in lines]
+        if (len(text) >= 2 and not FILLER.match(text[0]) and not is_heading(lines[0])
+                and FILLER.match(text[1])):
             widows.append(n)        # page starts with the last line of a paragraph
-        if text and FILLER.match(text[-1]) and len(text[-1]) > 60:
+        nxt = body[k + 1][1] if k + 1 < len(body) else []
+        if (text and FILLER.match(text[-1]) and nxt
+                and not FILLER.match(nxt[0][3]) and not is_heading(nxt[0])):
             orphans.append(n)       # page ends with the first line of a paragraph
-    return widows, orphans
+    return widows, orphans          # that goes on at the top of the next page
+
+
+def long_table_issues(pages, expected):
+    """Rows of long tables: each printed once, never alone on a page, and every
+    "(continued)" caption followed by the (bold) header row."""
+    issues, seen = [], {}
+    for n, lines in enumerate(pages, 1):
+        per_page = {}
+        for i, (_, _, bold, text) in enumerate(lines):
+            m = LONGROW.match(text)
+            if m:
+                seen[m.group(1)] = seen.get(m.group(1), 0) + 1
+                kind = m.group(1).split()[0]
+                per_page[kind] = per_page.get(kind, 0) + 1
+            if CONTINUED.match(text) and not (i + 1 < len(lines) and lines[i + 1][2]):
+                issues.append(f"page {n}: no header under the continued caption")
+        issues += [f"page {n}: one {k} row alone" for k, c in per_page.items() if c == 1]
+    missing = sorted(set(expected) - set(seen))
+    twice = sorted(k for k, c in seen.items() if c > 1)
+    if missing:
+        issues.append(f"rows missing: {', '.join(missing[:4])}")
+    if twice:
+        issues.append(f"rows printed twice: {', '.join(twice[:4])}")
+    return issues
 
 
 # ---------------------------------------------------------------- spacing
@@ -189,12 +225,23 @@ Xg text e.
 Xg text f.
 \end{document}
 """
+LONG_PROBE = PROBE.split(r"\section")[0] + r"""\section{Hg One}
+Xg text a.
+
+\begin{table}\caption{Xg cap.}\begin{autotable}{L R}\toprule A & 1\\\midrule
+""" + "".join(f"Xg {i} & {i} \\\\ \\rowline\n" for i in range(1, 60)) + r"""Xg 60 & 60 \\
+\bottomrule\end{autotable}\end{table}
+
+Xg text d.
+\end{document}
+"""
 PROBE_GAPS = ["H1-text", "para", "text-fig", "fig-cap", "cap-text", "text-tcap",
               "tcap-table", "rule-row", "row-rule", "table-text", "text-H2",
               "H2-text", "text-H3", "H3-text"]
 
 
 def spacing_checks(root, build_dir, res):
+    """Measured gaps of the probe page, or None if it could not be measured."""
     path = os.path.join(root, "probe-check.tex")
     open(path, "w").write(PROBE)
     try:
@@ -224,6 +271,52 @@ def spacing_checks(root, build_dir, res):
     res.check(min(h) > m["para"] / 3, "headings set apart from their text", f"{min(h):.1f}")
     res.check(abs(m["rule-row"] - m["row-rule"]) <= 1, "table cell padding even",
               f"{m['rule-row']:.1f} / {m['row-rule']:.1f}")
+    long_spacing_checks(root, build_dir, res, m, cap)
+    return m
+
+
+def first_ink(png):
+    """Top of the first ink on a 144 dpi grey page image, pt from the page top."""
+    from PIL import Image
+    im = Image.open(png).convert("L")
+    w, h = im.size
+    px = im.load()
+    return next((y / 2 for y in range(h) if any(px[x, y] < 200 for x in range(144, w - 144, 2))), 0)
+
+
+def long_spacing_checks(root, build_dir, res, m, cap):
+    """A table longer than a page: same gaps as a normal table, and its
+    "(continued)" caption starts inside the text area of the next page."""
+    path = os.path.join(root, "probe-long.tex")
+    open(path, "w").write(LONG_PROBE)
+    try:
+        pdf, log = build(root, "probe-long", os.path.join(build_dir, "probe-long"))
+    finally:
+        os.remove(path)
+    if not res.check(pdf is not None and not PROBLEM.search(log), "long-table probe builds"):
+        return
+    prefix = os.path.join(build_dir, "probe-long", "p")
+    run(["pdftoppm", "-r", "144", "-gray", "-png", pdf, prefix], root)
+    pngs = sorted(glob.glob(prefix + "-*.png"))
+    if not res.check(len(pngs) >= 2, "long-table probe continues on a second page"):
+        return
+    first, last = ink_gaps(pngs[0]), ink_gaps(pngs[-1])
+    if not res.check(len(first) >= 3 and len(last) >= 1, "long-table probe layout as expected",
+                     "" if len(first) >= 3 and len(last) >= 1 else
+                     "table ends at a page bottom; change the row count in LONG_PROBE"):
+        return
+    got = {"text-tcap": first[1], "tcap-table": first[2], "table-text": last[-1]}
+    print("  long table gaps (pt): " + ", ".join(f"{k} {v:.1f}" for k, v in got.items()))
+    for k in ("text-tcap", "table-text"):
+        res.check(abs(got[k] - m[k]) <= 1.5, f"long table: {k} like a normal table ({m[k]:.1f})",
+                  f"{got[k]:.1f}")
+    res.check(abs(got["tcap-table"] - cap) <= 1.5, f"long table: tcap-table matches \\CaptionGap",
+              f"{got['tcap-table']:.1f}")
+    margin = re.search(r"margin=([\d.]+)in", open(os.path.join(root, "style.tex")).read())
+    top = float(margin.group(1)) * 72 if margin else 72
+    ink = first_ink(pngs[1])
+    res.check(top - 1 <= ink <= top + 10, "long table: continued caption inside the text area",
+              f"starts {ink:.1f} pt from the page top, text area at {top:g}")
 
 
 # ---------------------------------------------------------------- README
@@ -284,7 +377,8 @@ def check_all(root, full=False, images=False):
         found = PROBLEM.findall(log)
         if res.check(pdf is not None and not found, f"{doc}.tex builds with no errors or warnings",
                      "" if pdf and not found else
-                     f"{'build failed' if pdf is None else f'{len(found)} problems'}, see build/{doc}.log"):
+                     (f"build failed, see build/{doc}.build.txt and build/{doc}.log" if pdf is None
+                      else f"{len(found)} problems, see build/{doc}.log")):
             pdfs[doc] = pdf
         elif pdf is not None:
             pdfs[doc] = pdf          # warnings only: the layout can still be checked
@@ -313,24 +407,32 @@ def check_all(root, full=False, images=False):
         w, o = widows_orphans(pages)
         res.check(not w and not o, f"{doc}: no widows or orphans",
                   f"widows on pages {w}, orphans on pages {o}" if w or o else "")
+        if doc == "test":
+            rows = [r for f in glob.glob(os.path.join(root, "tests", "*.tex"))
+                    for r in re.findall(r"^\s*((?:Sample|Item) \d\d) &", open(f).read(), re.M)]
+            issues = long_table_issues(pages, rows)
+            res.check(bool(rows) and not issues,
+                      f"test: long tables split cleanly ({len(rows)} rows)", "; ".join(issues[:3]))
     if full:
         pdf, _ = build(root, "test", os.path.join(build_dir, "control"), jobname="control",
-                       pre=r"\AtBeginDocument{\clubpenalty=0 \widowpenalty=0 \displaywidowpenalty=0}")
+                       pre=CONTROL)
         w, o = widows_orphans(read_pages(pdf)) if pdf else ([], [])
         res.check(bool(w and o), "page-break test makes a widow and an orphan with the penalties off",
-                  "" if w and o else "retune paragraph lengths in tests/t7-page-breaks.tex")
+                  "" if w and o else "retune paragraph lengths in tests/t7-page-breaks.tex, t8-orphans.tex")
 
     print("Spacing")
     if not have_pil():
         print("  skip (needs Pillow: sudo apt install python3-pil)")
     else:
-        spacing_checks(root, build_dir, res)
+        m = spacing_checks(root, build_dir, res)
+        limit = 2 * m["para"] if m else 32      # twice the paragraph gap
         for doc, pdf in pdfs.items():
             d = os.path.join(build_dir, "gaps", doc)
             os.makedirs(d)
             run(["pdftoppm", "-r", "144", "-gray", "-png", pdf, os.path.join(d, "p")], root)
             worst = max(g for f in glob.glob(os.path.join(d, "*.png")) for g in ink_gaps(f))
-            res.check(worst <= 32, f"{doc}: no gap between blocks over 32 pt", f"largest {worst:.1f}")
+            res.check(worst <= limit, f"{doc}: no gap between blocks over {limit:.0f} pt"
+                      " (twice the paragraph gap)", f"largest {worst:.1f}")
 
     if full:
         print("README")
@@ -375,8 +477,25 @@ def unit_tests():
          widows_orphans([[h1, text], [(80, 11, False, "end of a paragraph."),
                                       (100, 11, False, "Paragraph B. Starts here and goes on.")]])[0], [2]),
         ("orphan is found",
-         widows_orphans([[h1, text, (700, 11, False,
-                                     "Paragraph C. This sentence is filler for the page break test.")]])[1], [1]),
+         widows_orphans([[h1, text, (700, 11, False, "Paragraph C. This sentence is filler.")],
+                         [(80, 11, False, "and the paragraph goes on here."),
+                          (100, 11, False, "Paragraph D. Next.")]])[1], [1]),
+        ("one-line paragraph at page end is not an orphan",
+         widows_orphans([[h1, text, (700, 11, False, "Paragraph K. One sentence only.")],
+                         [(80, 11, False, "Paragraph L. Next."), (100, 11, False, "more text.")]])[1], []),
+        ("long table: clean split passes",
+         long_table_issues([[(100, 11, False, "Sample 01 1"), (120, 11, False, "Sample 02 2")],
+                            [(70, 9, False, "Table 3. (continued)"), (90, 11, True, "Sample Count"),
+                             (110, 11, False, "Sample 03 3"), (130, 11, False, "Sample 04 4")]],
+                           ["Sample 01", "Sample 02", "Sample 03", "Sample 04"]), []),
+        ("long table: missing row, lone row, missing header are found",
+         len(long_table_issues([[(100, 11, False, "Sample 01 1"), (120, 11, False, "Sample 02 2")],
+                                [(70, 9, False, "Table 3. (continued)"),
+                                 (110, 11, False, "Sample 03 3")]],
+                               ["Sample 01", "Sample 02", "Sample 03", "Sample 04"])), 3),
+        ("page starting with a heading is not a widow",
+         widows_orphans([[h1, text], [(80, 12, True, "7.2 Orphans"),
+                                      (100, 11, False, "Paragraph N. Starts here.")]])[0], []),
         ("page starting with a whole paragraph is not a widow",
          widows_orphans([[h1, text], [(80, 11, False, "Paragraph B. One line."),
                                       (100, 11, False, "Paragraph C. Next.")]])[0], []),
@@ -415,6 +534,14 @@ MUTATIONS = [
      "table cell padding even"),
     ("widow control off", [("style.tex", r"\widowpenalty=10000", r"\widowpenalty=0")],
      "test: no widows or orphans"),
+    ("orphan control off", [("style.tex", r"\clubpenalty=10000", r"\clubpenalty=0")],
+     "test: no widows or orphans"),
+    ("long table not split", [("style.tex", r"\Template@measurebox\relax>\textheight",
+                                r"\Template@measurebox\relax>100\textheight")],
+     "test.tex builds"),
+    ("long table too close to the text", [("style.tex", r"\setlength{\LTpre}{\dimexpr\FloatGap pt+\LatexLongTableTop pt\relax}",
+                                           r"\setlength{\LTpre}{0pt}")],
+     "long table: text-tcap"),
     ("broken README example", [("README.md", r"\begin{autotable}{L RR RR}", r"\begin{autotabel}{L RR RR}")],
      "README examples compile"),
 ]
@@ -432,8 +559,11 @@ def copy_repo(dst):
 def run_copy(name, edits):
     with tempfile.TemporaryDirectory(prefix="template-selftest-") as tmp:
         copy_repo(tmp)
-        for f, old, new in edits:
-            edit(os.path.join(tmp, f), old, new)
+        try:
+            for f, old, new in edits:
+                edit(os.path.join(tmp, f), old, new)
+        except AssertionError as e:      # the fault no longer applies: update MUTATIONS
+            return name, 2, f"FAIL {e}"
         p = subprocess.run([sys.executable, os.path.join(tmp, "scripts", "check.py"), "--full"],
                            cwd=tmp, capture_output=True, text=True)
         crash = p.stderr.strip().splitlines()[-1:] if p.returncode not in (0, 1) else []

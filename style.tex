@@ -51,7 +51,10 @@
 % Automatic width (autotable): the table is as wide as its content
 \newcommand{\TableColumnGap}{24}% space between the content of two columns, pt
 \newcommand{\TableTextMin}{0.2} % a wrapping text column is never narrower than
-                                % this share of the line; shorter ones stay natural
+                                % this share of the line (or an equal share, if
+                                % there are too many); shorter ones stay natural
+\newcommand{\TableContinued}{(continued)} % caption text on the next pages of a
+                                           % table longer than a page
 
 % ---- Lists and indents (Google Docs: Bullets & numbering > Indentation options)
 \newcommand{\ListLabelIndent}{18}  % bullet/number from the margin (0.25 in)
@@ -106,6 +109,8 @@
 \newcommand{\LatexCaptionTop}{\fpeval{5.5+0.69*\CaptionLineDelta}}     % caption skip → caption text top
 \newcommand{\LatexCaptionBottom}{\fpeval{3.75+0.30*\CaptionLineDelta}} % caption text bottom → next gap
 \newcommand{\LatexTableCaption}{\fpeval{2.75+0.28*\CaptionLineDelta}}  % caption text bottom → table top
+\newcommand{\LatexLongTableTop}{\fpeval{2.75+0.17*\CaptionLineDelta}}  % long table caption sits this
+                                                                       % much higher than a float's
 
 % ---------- Caption gaps, converted to LaTeX ----------
 % image → its caption below  (LaTeX adds \LatexCaptionTop itself)
@@ -172,6 +177,7 @@
 \usepackage{float}      % [H] placement
 \usepackage{flafter}    % a float never appears before its source position
 \usepackage{placeins}   % \FloatBarrier
+\usepackage{longtable}  % tables longer than a page
 \usepackage[hidelinks]{hyperref}
 \usepackage[nameinlink, capitalise, noabbrev]{cleveref}   % load last
 
@@ -420,6 +426,12 @@
 \usepackage{environ}
 \usepackage{tabulary}
 \setlength{\tymin}{\fpeval{\TableTextMin}\linewidth}
+% With too many text columns for that share, tabulary gives them equal widths;
+% it warns each time, which is expected here (e.g. four text columns on A4)
+\makeatletter
+\patchcmd{\endtabulary}{\TY@warn{tymin too large (\the\tymin), resetting to \the\dimen@}}{}{}
+  {\errmessage{style.tex: could not patch \string\endtabulary}}
+\makeatother
 \ExplSyntaxOn
 \tl_new:N \l_template_plainspec_tl   % L R C → l r c   (natural width)
 \tl_new:N \l_template_wrapspec_tl    % L stays L (wraps), R C → r c
@@ -458,7 +470,9 @@
 \NewEnviron{autotable}[1]{%
   \TemplateSpecs{#1}%
   \setbox\@ne\hbox{\TemplatePlainTabular{\BODY}}%
-  \ifdim\wd\@ne>\linewidth
+  \ifTemplate@long
+    \expandafter\TemplateLongTabular\expandafter{\BODY}% longer than a page (see below)
+  \else\ifdim\wd\@ne>\linewidth
     \ifnum\TemplateNtext>0
       \TemplateWrappedTabular{\BODY}%       too long: wrap text columns
     \else
@@ -466,8 +480,219 @@
     \fi
   \else
     \usebox\@ne%                            natural width
-  \fi
+  \fi\fi
 }
+\makeatother
+
+% ---------- Tables longer than a page ----------
+% A table whose caption and rows do not fit on one page is not a float: it
+% is set where it is written and continues on the next pages, each part
+% under "Table N. (continued)" (\TableContinued) with the header rows
+% repeated. It is written like any other table; the switch is automatic.
+% Column widths are the same as for a short table (natural, stretched, or
+% the widths tabulary chooses). A page never ends with only the header and
+% one row, or starts with only the last row.
+\makeatletter
+\newif\ifTemplate@long
+\newsavebox\Template@measurebox
+% Every table first collects its content and measures it, caption included
+\AtBeginEnvironment{table}{\let\table\Template@table}
+\def\Template@table{\Collect@Body\Template@tablebody}
+\long\def\Template@tablebody#1{\Template@tableopt#1\@nil}
+\def\Template@tableopt{\@ifnextchar[\Template@tableoptA{\Template@tableoptA[]}}
+\long\def\Template@tableoptA[#1]#2\@nil{%
+  \edef\Template@count{\the\c@table}%
+  \setbox\Template@measurebox\vbox{\hsize\columnwidth\linewidth\hsize
+    \@parboxrestore\@floatboxreset\def\@captype{table}\let\label\@gobble
+    \captionsetup{hypcap=false}#2}%
+  \global\c@table\Template@count\relax
+  \ifdim\dimexpr\ht\Template@measurebox+\dp\Template@measurebox\relax>\textheight
+    \expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi
+  {\par\Template@longtrue\let\endtable\relax
+   \global\let\Template@cap\@empty\global\let\Template@label\@empty
+   \let\Template@reallabel\label
+   \def\caption{\@dblarg\Template@storecaption}%
+   \def\label##1{\gdef\Template@label{##1}}%
+   \captionsetup{hypcap=false}% the link goes to the table start instead
+   #2}%
+  {\ifblank{#1}{\@float{table}#2}{\@float{table}[#1]#2}}}% a normal float
+\long\def\Template@storecaption[#1]#2{\gdef\Template@lotcap{#1}\gdef\Template@cap{#2}}
+% Column widths of a wrapping table: run tabulary's measuring pass and keep
+% the widths it computes (\TY@F1, \TY@F2 ...) instead of setting the table
+\newenvironment{Template@tywidths}
+  {\let\TY@final\Template@tycapture\let\endTY@final\relax\TY@tabular}
+  {\endtabulary}
+\long\def\Template@tycapture#1#2\endTY@final{%
+  \count@\z@
+  \loop\ifnum\count@<\Template@ncols\relax
+    \advance\count@\@ne
+    \expandafter\xdef\csname Template@w\the\count@\endcsname
+      {\the\dimexpr\csname TY@F\the\count@\endcsname\relax}%
+  \repeat}
+% Spacing like a figure/table placed in the text (\float@endH above). After
+% a heading: no page break between the two; if the header and first rows do
+% not fit, both go to the next page (longtable would break after the heading)
+\patchcmd{\LT@start}{\endgraf\penalty\z@\vskip\LTpre}
+  {\endgraf\Template@ltbreak\vskip\LTpre}{}
+  {\errmessage{style.tex: could not patch \string\LT@start}}
+\patchcmd{\LT@start}{\ifdim \dimen@>\z@ \vfil\break}
+  {\ifdim \dimen@>\z@ \Template@ltfull}{}
+  {\errmessage{style.tex: could not patch \string\LT@start}}
+\def\Template@ltbreak{\penalty\z@}
+\def\Template@ltfull{\vfil\break}
+\newcommand{\Template@ltspacing}{%
+  % fixed (no shrink): a long table fills its page, so it would use the shrink
+  \setlength{\LTpre}{\dimexpr\FloatGap pt+\LatexLongTableTop pt\relax}%
+  \setlength{\LTpost}{\intextsep}%
+  \ifTemplate@afterheading   % placed like [H], which adds \lineskip above
+    \addtolength{\LTpre}{\lineskip}%
+    \def\Template@ltbreak{\nobreak}\let\Template@ltfull\relax
+  \else\ifdim\prevdepth>-1000pt
+    \addtolength{\LTpre}{\dimexpr\Template@linebelow-\prevdepth\relax}\fi\fi}
+\newcommand{\Template@ltafter}{%
+  \prevdepth\Template@linebelow\kern-\parskip\global\Template@floatlasttrue}
+\AtBeginEnvironment{longtable}{\Template@tablestrut}
+% \rowline in a long table: the same light line, drawn as a row across all
+% columns like booktabs does in longtable, with the only page break point
+% between two rows right after it (none in the "nb" version)
+\newcommand{\Template@ltrule}[1]{\noalign{\nobreak}\multispan\LT@cols
+  {\color{TableRowRuleColor}\leaders\hrule\@height\TableRowRule pt\hfill\kern\z@}%
+  \cr\noalign{#1}}
+\newcommand{\Template@ltrowline}{\Template@ltrule{\penalty\z@}}
+\newcommand{\Template@ltrowlinenb}{\Template@ltrule{\nobreak}}
+% A caption row gets the caption's own strut instead of the cell strut, so
+% it starts where a figure/table caption would (with the cell strut it sits
+% too low; with none, its text reaches above the row, out of the text area)
+\newsavebox\Template@arstrut
+\newcommand{\Template@nostrut}{\noalign{\global\setbox\Template@arstrut\copy\@arstrutbox
+  \begingroup\docssmall
+  \global\setbox\@arstrutbox\hbox{\vrule\@height\ht\strutbox\@width\z@}\endgroup}}
+\newcommand{\Template@strut}{\noalign{\global\setbox\@arstrutbox\box\Template@arstrut}}
+\ExplSyntaxOn
+\tl_new:N \l_template_head_tl
+\tl_new:N \l_template_rows_tl
+\tl_new:N \l_template_ltspec_tl
+\tl_new:N \l_template_lt_tl
+\seq_new:N \l_template_rows_seq
+\int_new:N \l_template_nrows_int
+\cs_new_protected:Npn \__template_split_head:w #1 \midrule #2 \q_stop
+  { \tl_set:Nn \l_template_head_tl {#1} \tl_set:Nn \l_template_rows_tl {#2} }
+\cs_new_protected:Npn \__template_strip_bottom:w #1 \bottomrule #2 \q_stop
+  { \tl_set:Nn \l_template_rows_tl {#1} }
+\cs_new_protected:Npn \TemplateLongTabular #1
+  {
+    % column spec and horizontal position, as autotable would choose them
+    \dim_compare:nNnTF { \box_wd:N 1 } > { \linewidth }
+      {
+        \int_compare:nNnTF { \TemplateNtext } > { 0 }
+          {
+            \cs_set:Npx \Template@ncols { \tl_count:N \l_template_wrapspec_tl }
+            \hbox_set:Nn \l_tmpa_box
+              {
+                \Template@tablestrut
+                \exp_args:Nnnx \begin {Template@tywidths} {\linewidth}
+                  { @{\exp_not:N\TemplatePad} \l_template_wrapspec_tl @{\exp_not:N\TemplatePad} }
+                #1 \end{Template@tywidths}
+              }
+            \tl_set:Nn \l_template_ltspec_tl { @{\TemplatePad} }
+            \int_zero:N \l_tmpa_int
+            \tl_map_inline:Nn \l_template_wrapspec_tl
+              {
+                \int_incr:N \l_tmpa_int
+                \str_if_eq:nnTF {##1} {L}
+                  {
+                    \tl_put_right:Nx \l_template_ltspec_tl
+                      { > { \exp_not:N \raggedright \exp_not:N \arraybackslash }
+                        p { \use:c { Template@w \int_use:N \l_tmpa_int } } }
+                  }
+                  { \tl_put_right:Nn \l_template_ltspec_tl {##1} }
+              }
+            \tl_put_right:Nn \l_template_ltspec_tl { @{\TemplatePad} }
+            \setlength{\LTleft}{\fill} \setlength{\LTright}{\fill}
+          }
+          {
+            \tl_set:Nx \l_template_ltspec_tl
+              { @{ \exp_not:N \extracolsep { \exp_not:N \fill } \exp_not:N \TemplatePad }
+                \l_template_plainspec_tl @{ \exp_not:N \TemplatePad } }
+            \setlength{\LTleft}{0pt} \setlength{\LTright}{0pt}
+          }
+      }
+      {
+        \tl_set:Nx \l_template_ltspec_tl
+          { @{ \exp_not:N \TemplatePad } \l_template_plainspec_tl @{ \exp_not:N \TemplatePad } }
+        \str_if_eq:VnTF \CaptionStyle {left}
+          { \setlength{\LTleft}{0pt} } { \setlength{\LTleft}{\fill} }
+        \setlength{\LTright}{\fill}
+      }
+    % header rows (up to the first \midrule), body rows, no final \bottomrule
+    \tl_if_in:nnTF {#1} { \midrule }
+      { \__template_split_head:w #1 \q_stop }
+      { \tl_clear:N \l_template_head_tl \tl_set:Nn \l_template_rows_tl {#1} }
+    \tl_if_in:NnT \l_template_rows_tl { \bottomrule }
+      { \exp_last_unbraced:NV \__template_strip_bottom:w \l_template_rows_tl \q_stop }
+    \seq_set_split:NnV \l_template_rows_seq { \\ } \l_template_rows_tl
+    \seq_pop_right:NN \l_template_rows_seq \l_tmpa_tl
+    \tl_if_blank:VF \l_tmpa_tl { \seq_put_right:NV \l_template_rows_seq \l_tmpa_tl }
+    \int_set:Nn \l_template_nrows_int { \seq_count:N \l_template_rows_seq }
+    % caption + header on the first page, "(continued)" + header on the next
+    \tl_set:Nx \l_template_lt_tl
+      { \exp_not:N \begin {longtable} { \exp_not:V \l_template_ltspec_tl } }
+    \tl_if_empty:NF \Template@cap
+      {
+        \tl_put_right:Nx \l_template_lt_tl
+          {
+            \exp_not:N \Template@nostrut
+            \exp_not:N \caption [ \exp_not:V \Template@lotcap ] { \exp_not:V \Template@cap }
+            \tl_if_empty:NF \Template@label
+              { \exp_not:N \Template@reallabel { \exp_not:V \Template@label } }
+            \exp_not:N \\ \exp_not:N \Template@strut
+          }
+      }
+    \tl_if_empty:NTF \l_template_head_tl
+      { \tl_put_right:Nn \l_template_lt_tl { \endfirsthead } }
+      { \tl_put_right:Nx \l_template_lt_tl
+          { \exp_not:V \l_template_head_tl \exp_not:N \midrule \exp_not:N \endfirsthead } }
+    \tl_if_empty:NF \Template@cap
+      {
+        \tl_put_right:Nn \l_template_lt_tl
+          { \Template@nostrut \caption [] { \TableContinued } \\ \Template@strut }
+      }
+    \tl_if_empty:NTF \l_template_head_tl
+      { \tl_put_right:Nn \l_template_lt_tl { \toprule \endhead } }
+      { \tl_put_right:Nx \l_template_lt_tl
+          { \exp_not:V \l_template_head_tl \exp_not:N \midrule \exp_not:N \endhead } }
+    \tl_put_right:Nn \l_template_lt_tl
+      { \bottomrule \endfoot \bottomrule \endlastfoot }
+    % rows; no page break after the first row or before the last one
+    \seq_map_indexed_inline:Nn \l_template_rows_seq
+      {
+        \bool_lazy_and:nnTF
+          {
+            \bool_lazy_or_p:nn
+              { \int_compare_p:nNn {##1} = {2} }
+              { \int_compare_p:nNn {##1} = { \l_template_nrows_int } }
+          }
+          { \tl_if_head_eq_meaning_p:nN {##2} \rowline }
+          {
+            \tl_put_right:Nn \l_template_lt_tl { \Template@ltrowlinenb }
+            \tl_put_right:Nx \l_template_lt_tl { \exp_not:o { \tl_tail:n {##2} } }
+          }
+          { \tl_put_right:Nn \l_template_lt_tl {##2} }
+        \bool_lazy_or:nnTF
+          { \int_compare_p:nNn {##1} = {1} }
+          { \int_compare_p:nNn {##1} = { \l_template_nrows_int - 1 } }
+          { \tl_put_right:Nn \l_template_lt_tl { \\* } }
+          { \tl_put_right:Nn \l_template_lt_tl { \\ } }
+      }
+    \tl_put_right:Nn \l_template_lt_tl { \end{longtable} }
+    \Template@ltspacing
+    \cs_set_eq:NN \rowline \Template@ltrowline
+    \tl_use:N \l_template_lt_tl
+    \Template@ltafter
+  }
+\cs_generate_variant:Nn \seq_set_split:Nnn { NnV }
+\cs_generate_variant:Nn \str_if_eq:nnTF { Vn }
+\ExplSyntaxOff
 \makeatother
 
 % ---------- Header / footer ----------

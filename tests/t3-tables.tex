@@ -231,6 +231,101 @@ All tables below use the same \texttt{autotable}; only the content differs.
   \end{autotable}
 \end{table}
 
+\subsection{Table Longer Than a Page}
+
+A table longer than a page is set where it is written and continues on the
+next page, with its header repeated under the caption.
+
+\begin{table}
+  \caption{Long table at natural width: it continues on the next page with
+           its header repeated.}
+  \label{tab:t-long}
+  \begin{autotable}{L R R}
+    \toprule
+    \textbf{Sample} & \textbf{Count} & \textbf{Share} \\
+    \midrule
+    Sample 01 & 161 & 0.80 \\ \rowline
+    Sample 02 & 318 & 0.21 \\ \rowline
+    Sample 03 & 229 & 0.82 \\ \rowline
+    Sample 04 & 282 & 0.85 \\ \rowline
+    Sample 05 & 337 & 0.13 \\ \rowline
+    Sample 06 & 350 & 0.06 \\ \rowline
+    Sample 07 & 280 & 0.38 \\ \rowline
+    Sample 08 & 322 & 0.34 \\ \rowline
+    Sample 09 & 138 & 0.65 \\ \rowline
+    Sample 10 & 316 & 0.75 \\ \rowline
+    Sample 11 & 283 & 0.55 \\ \rowline
+    Sample 12 & 367 & 0.24 \\ \rowline
+    Sample 13 & 158 & 0.86 \\ \rowline
+    Sample 14 & 117 & 0.71 \\ \rowline
+    Sample 15 & 239 & 0.06 \\ \rowline
+    Sample 16 & 383 & 0.13 \\ \rowline
+    Sample 17 & 121 & 0.80 \\ \rowline
+    Sample 18 & 61 & 0.43 \\ \rowline
+    Sample 19 & 55 & 0.39 \\ \rowline
+    Sample 20 & 282 & 0.81 \\ \rowline
+    Sample 21 & 238 & 0.59 \\ \rowline
+    Sample 22 & 242 & 0.78 \\ \rowline
+    Sample 23 & 267 & 0.22 \\ \rowline
+    Sample 24 & 227 & 0.17 \\ \rowline
+    Sample 25 & 58 & 0.22 \\ \rowline
+    Sample 26 & 293 & 0.32 \\ \rowline
+    Sample 27 & 172 & 0.91 \\ \rowline
+    Sample 28 & 263 & 0.85 \\ \rowline
+    Sample 29 & 194 & 0.58 \\ \rowline
+    Sample 30 & 299 & 0.54 \\ \rowline
+    Sample 31 & 333 & 0.49 \\ \rowline
+    Sample 32 & 313 & 0.79 \\ \rowline
+    Sample 33 & 248 & 0.79 \\ \rowline
+    Sample 34 & 158 & 0.48 \\ \rowline
+    Sample 35 & 389 & 0.08 \\ \rowline
+    Sample 36 & 183 & 0.82 \\ \rowline
+    Sample 37 & 383 & 0.94 \\ \rowline
+    Sample 38 & 123 & 0.94 \\ \rowline
+    Sample 39 & 207 & 0.74 \\ \rowline
+    Sample 40 & 332 & 0.77 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
+\Cref{tab:t-long} starts on one page and ends on another.
+
+\subsection{Long Table Directly After a Heading}
+
+\begin{table}
+  \caption{Long table with a wrapping text column, directly after a heading.}
+  \begin{autotable}{L L R}
+    \toprule
+    \textbf{Item} & \textbf{Note} & \textbf{Score} \\
+    \midrule
+    Item 01 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.56 \\ \rowline
+    Item 02 & A note of medium length for this row. & 0.95 \\ \rowline
+    Item 03 & A longer note that wraps onto a second line inside the cell. & 0.91 \\ \rowline
+    Item 04 & Short note. & 0.63 \\ \rowline
+    Item 05 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.90 \\ \rowline
+    Item 06 & A note of medium length for this row. & 0.86 \\ \rowline
+    Item 07 & A longer note that wraps onto a second line inside the cell. & 0.67 \\ \rowline
+    Item 08 & Short note. & 0.68 \\ \rowline
+    Item 09 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.57 \\ \rowline
+    Item 10 & A note of medium length for this row. & 0.54 \\ \rowline
+    Item 11 & A longer note that wraps onto a second line inside the cell. & 0.80 \\ \rowline
+    Item 12 & Short note. & 0.90 \\ \rowline
+    Item 13 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.80 \\ \rowline
+    Item 14 & A note of medium length for this row. & 0.55 \\ \rowline
+    Item 15 & A longer note that wraps onto a second line inside the cell. & 0.72 \\ \rowline
+    Item 16 & Short note. & 0.54 \\ \rowline
+    Item 17 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.76 \\ \rowline
+    Item 18 & A note of medium length for this row. & 0.59 \\ \rowline
+    Item 19 & A longer note that wraps onto a second line inside the cell. & 0.51 \\ \rowline
+    Item 20 & Short note. & 0.68 \\ \rowline
+    Item 21 & The longest note in the table: it explains what happened in this case and why, so it takes two or three lines. & 0.77 \\ \rowline
+    Item 22 & A note of medium length for this row. & 0.99 \\ \rowline
+    Item 23 & A longer note that wraps onto a second line inside the cell. & 0.76 \\ \rowline
+    Item 24 & Short note. & 0.57 \\
+    \bottomrule
+  \end{autotable}
+\end{table}
+
 \subsection{Table Then Heading}
 
 \begin{table}

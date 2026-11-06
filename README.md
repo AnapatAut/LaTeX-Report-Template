@@ -135,6 +135,9 @@ after the last sub-figure if the whole figure needs one.
   neighbouring columns (`\TableColumnGap`), and centred
 - content longer than the line → full width; text (`L`) columns wrap and get
   width in proportion to their text; number (`R`) columns stay narrow
+- a table longer than a page is set where it is written and continues on the
+  next page under "Table 3. (continued)", with the header rows (everything
+  above `\midrule`) repeated; same columns, no change to the content
 
 Choosing column types:
 - text, or a mix like "0.869, but slow" → `L`
@@ -192,7 +195,9 @@ one is justified across the full text width. `\CaptionStyle` also offers
 - A figure/table goes where it is written if it fits, otherwise to the top of
   the next page while the text fills the gap. It never appears before the place
   it is written, and never moves past the next numbered section.
-- A figure/table and its caption are never split.
+- A figure/table and its caption are never split. A table longer than a
+  page is the exception: it continues on the next page (see Table), and a
+  page never holds only its header and one row, or only its last row.
 - A heading is never left alone at the bottom of a page (keep with next), and a
   figure/table written directly after a heading stays attached to it.
 - A paragraph never leaves a single line alone at the bottom or top of a page.
@@ -214,7 +219,7 @@ After changing `style.tex` or the tests, run:
 python3 scripts/check.py             # about 10 s
 python3 scripts/check.py --full      # also README examples and the widow test
 python3 scripts/check.py --render    # also page images in build/pages/
-python3 scripts/check.py --selftest  # proves the checks work (about 40 s)
+python3 scripts/check.py --selftest  # proves the checks work (about 1 min)
 ```
 It rebuilds both documents from scratch into `build/` and deletes it again
 when everything passed; `build/` is kept when a check fails (logs to read) or
@@ -224,13 +229,16 @@ with `--render`. It checks:
 - no page ends with a heading, no widows or orphans;
 - spacing measured on the page: captions at `\CaptionGap`, figures and
   tables about one paragraph gap from the text, all three heading levels the
-  same distance from their text, even table cell padding, no gap over 32 pt.
+  same distance from their text, even table cell padding, no gap over 32 pt;
+- tables longer than a page: every row printed once, header repeated, no
+  row alone on a page, same spacing as a normal table.
 
 `--selftest` runs the page-flow detectors on made-up pages, then runs the
 checks on temporary copies of the repo: the clean copy must pass, and each
 copy with one deliberate fault (build error, `\small` in a test file, wide
 figure gap, Heading 3 with no space after, wrong caption offset, uneven cell
-padding, widow control off, broken README example) must fail the matching
+padding, widow control off, orphan control off, long table not split, long
+table too close to the text, broken README example) must fail the matching
 check. Run it after changing `scripts/check.py`.
 
 Exit code 0 means all passed. Needs poppler-utils (`pdftohtml`, `pdftoppm`);
@@ -238,9 +246,10 @@ the spacing checks and page images also need Pillow (`python3-pil`). Look at
 the page images before committing a visual change.
 
 ## Limitations
-- A table cannot continue on the next page. A table taller than the page
-  runs off the bottom with the warning "Float too large for page"; split it
-  into two tables.
+- A table longer than a page is not a float: it starts where it is written
+  instead of moving to the top of the next page.
+- `autotable` must be inside a `table` environment (with its caption) to
+  continue across pages.
 - Equations use Latin Modern (Lora has no math font).
 - XeLaTeX should work (same font loading), but only LuaLaTeX is tested.
 
